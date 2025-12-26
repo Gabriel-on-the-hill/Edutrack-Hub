@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply font-body text-neutral-800 bg-neutral-50;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-heading font-bold;
+}
+
+h1 {
+  @apply text-4xl md:text-5xl lg:text-6xl;
+}
+
+h2 {
+  @apply text-3xl md:text-4xl lg:text-5xl;
+}
+
+h3 {
+  @apply text-2xl md:text-3xl lg:text-4xl;
+}
+
+h4 {
+  @apply text-xl md:text-2xl lg:text-3xl;
+}
+
+h5 {
+  @apply text-lg md:text-xl lg:text-2xl;
+}
+
+h6 {
+  @apply text-base md:text-lg lg:text-xl;
+}
+
+p {
+  @apply text-base md:text-lg leading-relaxed;
+}
+
+/* Button Styles */
+.btn {
+  @apply px-6 py-3 rounded-lg font-semibold transition-all duration-300 ease-in-out;
+}
+
+.btn-primary {
+  @apply btn bg-primary-500 text-white hover:bg-primary-600 active:bg-primary-700;
+}
+
+.btn-secondary {
+  @apply btn bg-secondary-500 text-white hover:bg-secondary-600 active:bg-secondary-700;
+}
+
+.btn-outline {
+  @apply btn border-2 border-primary-500 text-primary-500 hover:bg-primary-50;
+}
+
+.btn-ghost {
+  @apply btn text-neutral-800 hover:bg-neutral-200;
+}
+
+/* Link Styles */
+a {
+  @apply text-primary-500 hover:text-primary-600 transition-colors duration-200;
+}
+
+a:visited {
+  @apply text-secondary-500;
+}
+
+/* Form Styles */
+input, textarea, select {
+  @apply w-full px-4 py-3 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
+}
+
+input:disabled, textarea:disabled, select:disabled {
+  @apply bg-neutral-100 cursor-not-allowed;
+}
+
+label {
+  @apply block text-sm font-semibold text-neutral-700 mb-2;
+}
+
+/* Card Styles */
+.card {
+  @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-6;
+}
+
+.card-header {
+  @apply border-b border-neutral-200 pb-4 mb-4;
+}
+
+.card-body {
+  @apply flex-1;
+}
+
+.card-footer {
+  @apply border-t border-neutral-200 pt-4 mt-4;
+}
+
+/* Utility Classes */
+.container-max {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.section-padding {
+  @apply py-12 md:py-16 lg:py-20;
+}
+
+.text-gradient {
+  @apply bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent;
+}
+
+/* Accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus Visible for Keyboard Navigation */
+*:focus-visible {
+  @apply outline-2 outline-offset-2 outline-primary-500;
+}
+
+/* Smooth Transitions */
+* {
+  @apply transition-colors duration-200;
+}
+
