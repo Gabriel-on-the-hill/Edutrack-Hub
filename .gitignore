@@ -16,17 +16,7 @@ dist/
 /prisma/migrations/
 .prisma/
 
-# Misc
-.DS_Store
-*.pem
-
-# Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# Local Env Files
+# Environment files
 .env
 .env*.local
 .env.development.local
@@ -41,7 +31,13 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Editor directories and files
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Editor & IDE
 .idea/
 .vscode/
 *.suo
@@ -50,8 +46,21 @@ next-env.d.ts
 *.sln
 *.sw?
 
+# OS files
+.DS_Store
+Thumbs.db
+*.pem
+
 # Gemini Agent
 .gemini/
 
-# Uploads
+# User uploads (stored in cloud, not repo)
 public/uploads/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Build artifacts
+*.tgz

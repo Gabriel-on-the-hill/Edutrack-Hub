@@ -118,7 +118,7 @@ export default function Login() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-6">
               {[
-                { number: '94%', label: 'Grade improvement' },
+                { number: '94%', label: 'Success rate' },
                 { number: '4.9', label: 'Student rating' },
                 { number: '12+', label: 'Countries' },
               ].map((stat, i) => (

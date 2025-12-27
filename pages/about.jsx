@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import Image from 'next/image';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 
@@ -52,9 +53,6 @@ export default function About() {
                 <title>About - EduTrack Hub</title>
                 <meta name="description" content="Learn about EduTrack Hub and meet the tutor behind the platform. Our mission is to make quality education accessible to students worldwide." />
                 <link rel="icon" href="/logo.png" type="image/png" />
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-                <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
             </Head>
 
             <style jsx global>{`
@@ -85,16 +83,15 @@ export default function About() {
                         <div className="grid lg:grid-cols-2 gap-16 items-center">
                             {/* Image */}
                             <div className="relative">
-                                <div className="aspect-[4/5] bg-gradient-to-br from-teal-500 to-teal-600 rounded-3xl overflow-hidden">
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="text-center text-white/90">
-                                            <div className="w-32 h-32 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
-                                                <Icons.GraduationCap className="w-16 h-16" />
-                                            </div>
-                                            <p className="text-2xl font-bold">Gabriel</p>
-                                            <p className="text-teal-100">Founder & Lead Tutor</p>
-                                        </div>
-                                    </div>
+                                <div className="aspect-[4/5] relative bg-gradient-to-br from-teal-500 to-teal-600 rounded-3xl overflow-hidden shadow-2xl">
+                                    <Image
+                                        src="/gabriel-portrait.jpg"
+                                        alt="Gabriel - Founder & Lead Tutor"
+                                        fill
+                                        className="object-cover object-top"
+                                        sizes="(max-width: 768px) 100vw, 50vw"
+                                        priority
+                                    />
                                 </div>
                                 {/* Floating card */}
                                 <div className="absolute -bottom-6 -right-6 bg-white rounded-2xl shadow-xl p-5">
@@ -188,7 +185,7 @@ export default function About() {
                             {[
                                 { number: '200+', label: 'Students Taught' },
                                 { number: '12+', label: 'Countries' },
-                                { number: '94%', label: 'Grade Improvement' },
+                                { number: '94%', label: 'Success Rate' },
                                 { number: '4.9', label: 'Average Rating' },
                             ].map((stat, i) => (
                                 <div key={i}>

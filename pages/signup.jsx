@@ -144,7 +144,7 @@ export default function Signup() {
           <div className="relative z-10">
             <h1 className="text-4xl font-bold text-white mb-6 leading-tight">
               Start your journey to<br />
-              <span className="text-amber-300">better grades</span>
+              <span className="text-amber-300">real results</span>
             </h1>
             <p className="text-teal-100 text-lg mb-8">
               Join students from 12+ countries who've transformed their academic performance with live, interactive tutoring.
@@ -174,7 +174,7 @@ export default function Signup() {
             </div>
             <div>
               <p className="text-white font-medium">Join 500+ students</p>
-              <p className="text-teal-200 text-sm">who've improved their grades</p>
+              <p className="text-teal-200 text-sm">who've achieved their goals</p>
             </div>
           </div>
         </div>

@@ -2,53 +2,188 @@
 
 This guide explains how to deploy **EduTrack Hub** to production using **Vercel** and **Neon**.
 
+---
+
+## Prerequisites
+
+- GitHub repository with your code
+- [Neon](https://neon.tech) account (free tier available)
+- [Vercel](https://vercel.com) account
+- [Resend](https://resend.com) account (for transactional emails)
+- [Stripe](https://stripe.com) account (for payments, optional)
+
+---
+
 ## 1. Database Setup (Neon)
 
-1.  Sign up at [neon.tech](https://neon.tech).
-2.  Create a project named `edutrack`.
-3.  Copy the **Connection String** from the dashboard.
-    - *Example*: `postgresql://alex:AbC123dEf@ep-cool-darkness-123456.us-east-2.aws.neon.tech/neondb?sslmode=require`
+1. Sign up at [neon.tech](https://neon.tech)
+2. Create a new project named `edutrack`
+3. Copy the **Connection String** from the dashboard
+   - Format: `postgresql://user:password@ep-xxxxx.region.aws.neon.tech/neondb?sslmode=require`
 
-## 2. Prepare Environment Variables
+---
 
-You will need the following for production:
+## 2. Environment Variables
 
-| Variable | Source |
-| :--- | :--- |
-| `DATABASE_URL` | From Neon dashboard |
-| `JWT_SECRET` | Generate via `openssl rand -base64 32` |
-| `NEXT_PUBLIC_APP_URL` | Your final Vercel URL (e.g., `https://edutrack-hub.vercel.app`) |
+Prepare these values before deploying:
+
+| Variable | Source | Required |
+|----------|--------|----------|
+| `DATABASE_URL` | Neon dashboard | ✅ Yes |
+| `JWT_SECRET` | Generate: `openssl rand -base64 32` | ✅ Yes |
+| `NEXT_PUBLIC_APP_URL` | Your Vercel URL (e.g., `https://edutrack-hub.vercel.app`) | ✅ Yes |
+| `RESEND_API_KEY` | Resend dashboard | ✅ Yes |
+| `STRIPE_SECRET_KEY` | Stripe dashboard | Optional |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe dashboard | Optional |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook settings | Optional |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary dashboard | Optional |
+| `CLOUDINARY_API_KEY` | Cloudinary dashboard | Optional |
+| `CLOUDINARY_API_SECRET` | Cloudinary dashboard | Optional |
+
+---
 
 ## 3. Deploy to Vercel
 
-### via Vercel Dashboard (Recommended)
-1.  Push your code to a **GitHub** repository.
-2.  Go to [Vercel Dashboard](https://vercel.com/dashboard) and click **Add New** → **Project**.
-3.  Import your repository.
-4.  In the **Environment Variables** section, add the variables from Step 2.
-5.  Click **Deploy**.
+### Option A: Via Vercel Dashboard (Recommended)
 
-### Post-Deployment (Manual Database Sync)
-Once deployed, Vercel runs the build. However, you must ensure the database schema is synchronized:
-1.  Run the following command locally using your **Production** `DATABASE_URL`:
-    ```bash
-    npx prisma db push
-    ```
-    *Alternatively, you can set up a GitHub Action to handle this.*
+1. Push your code to **GitHub**
+2. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+3. Click **Add New** → **Project**
+4. Import your GitHub repository
+5. In **Environment Variables**, add all variables from Step 2
+6. Click **Deploy**
 
-## 4. Troubleshooting
+### Option B: Via Vercel CLI
 
-### Build Failures
-- Ensure all dependencies are in `package.json`.
-- Check that `prisma generate` is part of your build script: `"build": "prisma generate && next build"`.
+```bash
+# Install Vercel CLI
+npm i -g vercel
 
-### Database Connection
-- If using Neon, ensure `?sslmode=require` is at the end of your `DATABASE_URL`.
-- Check **IP Allowlisting** in Neon if you have restricted access.
+# Login
+vercel login
 
-### Authentication Issues
-- Ensure `JWT_SECRET` is consistent across all environments.
-- Check that `NEXT_PUBLIC_APP_URL` matches your actual domain for cookie security.
+# Deploy
+vercel --prod
+```
 
 ---
-**EduTrack Hub** | Production Readiness Guide
+
+## 4. Post-Deployment Setup
+
+### Sync Database Schema
+
+After the first deployment, sync your database:
+
+```bash
+# Set your production DATABASE_URL temporarily
+export DATABASE_URL="postgresql://..."
+
+# Push schema
+npx prisma db push
+
+# Optional: Seed with initial data
+npm run db:seed
+```
+
+### Configure Stripe Webhooks (If using payments)
+
+1. Go to Stripe Dashboard → Webhooks
+2. Add endpoint: `https://your-domain.vercel.app/api/webhooks/stripe`
+3. Select events:
+   - `checkout.session.completed`
+   - `payment_intent.succeeded`
+4. Copy the webhook secret to `STRIPE_WEBHOOK_SECRET` in Vercel
+
+### Configure Resend Domain (For emails)
+
+1. Go to Resend Dashboard → Domains
+2. Add your domain and verify DNS records
+3. Update `EMAIL_FROM` in your code if needed
+
+---
+
+## 5. Troubleshooting
+
+### Build Failures
+
+**Prisma Client not generated**
+- Ensure build script is: `"build": "prisma generate && next build"`
+
+**Missing dependencies**
+- Run `npm install` and commit `package-lock.json`
+
+### Database Connection Issues
+
+**SSL required error**
+- Ensure `?sslmode=require` is at the end of `DATABASE_URL`
+
+**Connection timeout**
+- Check Neon dashboard for IP restrictions
+- Verify the connection string is correct
+
+### Authentication Issues
+
+**Cookies not working**
+- Ensure `NEXT_PUBLIC_APP_URL` matches your actual domain
+- For custom domains, update cookie settings in `lib/auth.js`
+
+**JWT errors**
+- Ensure `JWT_SECRET` is the same across all environments
+- Regenerate tokens after changing the secret
+
+### Email Not Sending
+
+**Resend errors**
+- Verify API key is correct
+- Check domain is verified in Resend dashboard
+- Review Resend logs for specific errors
+
+---
+
+## 6. Custom Domain Setup
+
+1. In Vercel Dashboard → Your Project → Settings → Domains
+2. Add your custom domain
+3. Update DNS records as instructed
+4. Update `NEXT_PUBLIC_APP_URL` to your custom domain
+5. Redeploy for changes to take effect
+
+---
+
+## 7. Monitoring & Logs
+
+### Vercel Logs
+- Go to Vercel Dashboard → Your Project → Deployments
+- Click on any deployment → Functions tab
+
+### Database Monitoring
+- Neon Dashboard shows queries, connections, and storage
+
+### Error Tracking (Recommended)
+Consider adding [Sentry](https://sentry.io) for production error tracking.
+
+---
+
+## Quick Reference
+
+```bash
+# Local development
+npm run dev
+
+# Production build (test locally)
+npm run build && npm run start
+
+# Database commands
+npx prisma db push      # Sync schema
+npx prisma studio       # Visual editor
+npm run db:seed         # Seed data
+
+# Vercel CLI
+vercel                  # Preview deploy
+vercel --prod           # Production deploy
+vercel env pull         # Pull env vars
+```
+
+---
+
+**EduTrack Hub** | Production Deployment Guide

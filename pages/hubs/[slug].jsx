@@ -158,7 +158,7 @@ export default function HubPage() {
                                 {content.resources.map((resource, i) => (
                                     <div key={i} className="group flex items-start gap-4 p-6 bg-white rounded-3xl border border-slate-100 hover:shadow-lg transition-all">
                                         <div className={`w-12 h-12 rounded-xl bg-${content.color}-50 flex items-center justify-center flex-shrink-0`}>
-                                            <Icons.HeroBlob className={`w-6 h-6 text-${content.color}-600`} />
+                                            <Icons.BookOpen className={`w-6 h-6 text-${content.color}-600`} />
                                         </div>
                                         <div>
                                             <span className="text-[10px] font-bold tracking-widest uppercase text-slate-400 mb-1 block">{resource.type}</span>

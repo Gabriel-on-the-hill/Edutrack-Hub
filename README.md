@@ -1,113 +1,131 @@
-# EduTrack Hub v2.0 - Phase 1 Complete
+# EduTrack Hub
 
-A production-ready live tutoring platform built with Next.js, Prisma, and Neon (Serverless PostgreSQL).
+> **Learn live. Learn anytime.**  
+> Flexible learning. Measurable progress.
 
-## 🎯 Phase 1 Features
+A modern live tutoring platform built with Next.js, Prisma, and Neon PostgreSQL. EduTrack Hub helps learners of all ages build real skills through live instruction, guided resources, and progress-driven learning.
 
-### ✅ Core Features Implemented
-- **Real Authentication** - JWT with httpOnly cookies, bcrypt password hashing
-- **Role-Based Access** - ADMIN and STUDENT roles with protected routes
-- **Class Management** - Full CRUD for tutoring sessions
-- **Enrollment System** - Browse, enroll, and track class participation
-- **Progress Tracking** - Track learning progress by subject with stats
-- **Attendance System** - Record and persist class attendance
-- **Audit Trail** - Log admin actions for accountability
-- **Real Data** - All features use actual database, no mocks
+---
 
-### 🏗️ Tech Stack
-- **Frontend**: Next.js 14, React 18, Tailwind CSS
-- **Backend**: Next.js API Routes
-- **Database**: Neon (Serverless PostgreSQL)
-- **ORM**: Prisma
-- **Auth**: JWT + bcrypt
+## ✨ Features
+
+### Learning Hubs
+- **Foundation Hub** — Elementary & Middle school fundamentals
+- **Success Hub** — High School, IGCSE, SAT, A-Levels, IB, AP
+- **Elite Hub** — Professional upskilling & mentorship  
+- **Partner Hub** — Resources for parents & educators
+
+### Core Platform
+- **Real Authentication** — JWT with httpOnly cookies, bcrypt password hashing
+- **Role-Based Access** — ADMIN and STUDENT roles with protected routes
+- **Class Management** — Full CRUD for live tutoring sessions
+- **Enrollment System** — Browse, enroll, and track participation
+- **Progress Tracking** — Subject-based progress with visual stats
+- **Attendance System** — Record and persist class attendance
+- **Blog & SEO** — MDX-powered blog for content marketing
+- **Admin Dashboard** — Revenue/growth analytics with charts
+- **Lead Capture** — Email collection for marketing
+- **Contact System** — Inquiry forms with email notifications
+
+---
+
+## 🏗 Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | Next.js 14, React 18, Tailwind CSS |
+| Backend | Next.js API Routes |
+| Database | Neon (Serverless PostgreSQL) |
+| ORM | Prisma |
+| Auth | JWT + bcrypt |
+| Charts | Recharts |
+| Email | Resend |
+| Payments | Stripe (ready) |
+| Deployment | Vercel |
+
+---
 
 ## 📁 Project Structure
 
 ```
 edutrack-hub/
-├── components/           # Reusable UI components
+├── components/
+│   ├── admin/           # Admin-specific components
+│   ├── layout/          # Navigation, Footer
+│   ├── marketing/       # LeadMagnet, etc.
+│   └── ui/              # Icons, shared UI
+├── content/
+│   └── blog/            # MDX blog posts
 ├── hooks/
-│   └── useAuth.js       # Auth hook, context, withAuth HOC
+│   └── useAuth.js       # Auth context & HOC
 ├── lib/
 │   ├── auth.js          # JWT, bcrypt, cookies, RBAC
 │   ├── db.js            # Prisma client singleton
-│   ├── audit.js         # Audit logging utility
-│   └── brandTokens.js   # Design tokens
+│   ├── mdx.js           # Blog post utilities
+│   └── rate-limit.js    # API rate limiting
 ├── pages/
-│   ├── _app.jsx         # App wrapper with AuthProvider
 │   ├── index.jsx        # Homepage
-│   ├── login.jsx        # Login page
-│   ├── signup.jsx       # Signup page
-│   ├── classes.jsx      # Browse & enroll in classes
-│   ├── admin/
-│   │   ├── dashboard.jsx  # Admin overview + stats
-│   │   └── classes.jsx    # Manage classes (CRUD)
-│   ├── dashboard/
-│   │   └── student.jsx    # Student dashboard + progress
-│   └── api/
-│       ├── auth/          # signup, login, logout, me
-│       ├── classes/       # CRUD + list
-│       ├── enrollments/   # Student enrollments
-│       ├── progress/      # Progress tracking
-│       ├── attendance/    # Attendance recording
-│       ├── admin/         # Admin stats, enrollments
-│       └── contact/       # Contact form
+│   ├── about.jsx        # About page with tutor photo
+│   ├── classes.jsx      # Browse & enroll
+│   ├── contact.jsx      # Contact form
+│   ├── blog/            # Blog listing & posts
+│   ├── hubs/            # Learning hub pages
+│   ├── admin/           # Admin dashboard & management
+│   ├── dashboard/       # Student dashboard
+│   └── api/             # All API endpoints
 ├── prisma/
-│   ├── schema.prisma    # PostgreSQL schema
+│   ├── schema.prisma    # Database schema
 │   └── seed.js          # Seed script
-├── public/              # Static assets
-├── styles/
-│   └── globals.css      # Tailwind + custom styles
-└── .env.example         # Environment template
+├── public/
+│   ├── logo.png         # Brand logo
+│   └── gabriel-portrait.jpg  # Tutor photo
+└── styles/
+    └── globals.css      # Tailwind + custom styles
 ```
+
+---
 
 ## 🚀 Quick Start
 
-### 1. Create Neon Database (Free)
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+- Neon account (free tier works)
 
-1. Go to [neon.tech](https://neon.tech) and create an account
-2. Create a new project called `edutrack`
-3. Go to **Dashboard** → **Connection Details**
-4. Copy the connection string (starts with `postgresql://`)
-
-### 2. Local Setup
-
+### 1. Clone & Install
 ```bash
-# Clone/extract the project
+git clone <your-repo>
 cd edutrack-hub
-
-# Install dependencies
 npm install
+```
 
-# Create environment file
+### 2. Environment Setup
+```bash
 cp .env.example .env.local
+```
 
-# Edit .env.local with your values:
-# DATABASE_URL="postgresql://..."  (from Neon)
-# JWT_SECRET="..."  (run: openssl rand -base64 32)
+Edit `.env.local`:
+```env
+DATABASE_URL="postgresql://..." # From Neon dashboard
+JWT_SECRET="..."                # Run: openssl rand -base64 32
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+```
 
-# Generate Prisma client
+### 3. Database Setup
+```bash
 npx prisma generate
-
-# Push schema to database
 npx prisma db push
-
-# Seed with sample data
 npm run db:seed
+```
 
-# Start development server
+### 4. Run Development Server
+```bash
 npm run dev
 ```
 
-### 3. Access the App
+Visit [http://localhost:3000](http://localhost:3000)
 
-| Page | URL |
-|------|-----|
-| Homepage | http://localhost:3000 |
-| Browse Classes | http://localhost:3000/classes |
-| Login | http://localhost:3000/login |
-| Student Dashboard | http://localhost:3000/dashboard/student |
-| Admin Dashboard | http://localhost:3000/admin/dashboard |
+---
 
 ## 👤 Test Accounts
 
@@ -115,105 +133,123 @@ npm run dev
 |------|-------|----------|
 | Admin | admin@edutrackhub.com | admin123456 |
 | Student | student@example.com | student123456 |
-| Student | jane@example.com | student123456 |
 
-## 📊 Database Schema
+---
 
-### Models
-- **User** - Students and admins
-- **Class** - Live tutoring sessions
-- **Enrollment** - Student-class relationships
-- **Attendance** - Class attendance records
-- **Progress** - Learning progress by subject
-- **Payment** - Payment records (Phase 2)
-- **Resource** - Downloadable content
-- **AuditLog** - Admin action history
-- **ContactMessage** - Contact form submissions
+## 📊 Key Pages
+
+| Page | URL | Description |
+|------|-----|-------------|
+| Homepage | `/` | Marketing landing page |
+| About | `/about` | Meet the tutor |
+| Classes | `/classes` | Browse & enroll |
+| Blog | `/blog` | SEO content |
+| Contact | `/contact` | Inquiry form |
+| FAQ | `/faq` | Common questions |
+| Hub Pages | `/hubs/[slug]` | Foundation, Success, Elite, Partner |
+| Login | `/login` | Authentication |
+| Signup | `/signup` | Registration |
+| Student Dashboard | `/dashboard/student` | Progress & classes |
+| Admin Dashboard | `/admin/dashboard` | Analytics & management |
+
+---
 
 ## 🔌 API Endpoints
 
 ### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/auth/signup | Create account |
-| POST | /api/auth/login | Login |
-| POST | /api/auth/logout | Logout |
-| GET | /api/auth/me | Get current user |
+- `POST /api/auth/signup` — Create account
+- `POST /api/auth/login` — Login
+- `POST /api/auth/logout` — Logout
+- `GET /api/auth/me` — Current user
+- `POST /api/auth/forgot-password` — Password reset request
+- `POST /api/auth/reset-password` — Reset password
 
 ### Classes
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/classes | List classes |
-| POST | /api/classes | Create class (admin) |
-| GET | /api/classes/[id] | Get class details |
-| PUT | /api/classes/[id] | Update class (admin) |
-| DELETE | /api/classes/[id] | Delete class (admin) |
+- `GET /api/classes` — List all classes
+- `POST /api/classes` — Create class (admin)
+- `GET /api/classes/[id]` — Class details
+- `PUT /api/classes/[id]` — Update class (admin)
+- `DELETE /api/classes/[id]` — Delete class (admin)
 
-### Enrollments & Progress
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/enrollments | Get user's enrollments |
-| POST | /api/enrollments | Enroll in a class |
-| GET | /api/progress | Get learning progress |
-| POST | /api/attendance | Record attendance |
+### User & Progress
+- `GET /api/enrollments` — User's enrollments
+- `POST /api/enrollments` — Enroll in class
+- `GET /api/progress` — Learning progress
+- `POST /api/attendance` — Record attendance
 
 ### Admin
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/admin/stats | Platform statistics |
-| GET | /api/admin/enrollments | All enrollments |
+- `GET /api/admin/stats` — Platform statistics
+- `GET /api/admin/enrollments` — All enrollments
+- `GET /api/admin/users` — User management
+- `POST /api/admin/upload` — File uploads
 
-## 🌐 Deploy to Vercel
+### Other
+- `POST /api/contact/send` — Contact form
+- `POST /api/leads` — Email capture
+- `GET /api/sitemap` — Dynamic sitemap
 
-1. Push code to GitHub
-2. Import project in [Vercel](https://vercel.com)
+---
+
+## 🌐 Deployment
+
+### Vercel (Recommended)
+
+1. Push to GitHub
+2. Import in [Vercel Dashboard](https://vercel.com)
 3. Add environment variables:
-   - `DATABASE_URL` (Neon connection string)
-   - `JWT_SECRET` (your secret key)
+   - `DATABASE_URL`
+   - `JWT_SECRET`
+   - `NEXT_PUBLIC_APP_URL` (your Vercel URL)
+   - `RESEND_API_KEY` (for emails)
+   - `STRIPE_SECRET_KEY` (for payments)
 4. Deploy!
 
-## ✅ Phase 1 Checklist
+### Post-Deployment
+```bash
+# Sync database schema (run locally with production DATABASE_URL)
+npx prisma db push
+```
 
-- [x] Neon PostgreSQL database
-- [x] Real authentication (signup, login, logout)
-- [x] JWT with httpOnly cookies
-- [x] Password hashing with bcrypt
-- [x] Role-based access control (ADMIN, STUDENT)
-- [x] Classes API with full CRUD
-- [x] Enrollments API with status tracking
-- [x] Progress tracking by subject
-- [x] Attendance recording system
-- [x] Admin dashboard with real stats
-- [x] Student dashboard with progress visualization
-- [x] Audit trail for admin actions
-- [x] Public classes page with enrollment
-- [x] Database seed script with sample data
-- [x] Build verified with zero errors
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
 
-- [x] Class recordings & notes (Basic URL fields added)
-- [x] Resource downloads (Lead Magnet added)
-- [x] Advanced analytics (Admin Dashboard)
-- [x] Blog & SEO System
+---
 
-## 📝 Environment Variables
+## 📝 Adding Blog Posts
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| DATABASE_URL | Neon PostgreSQL connection string | Yes |
-| JWT_SECRET | Secret for JWT (min 32 chars) | Yes |
-| NEXT_PUBLIC_APP_URL | Your app URL | No |
+1. Create a new `.mdx` file in `content/blog/`
+2. Add frontmatter:
+```yaml
+---
+title: 'Your Post Title'
+date: '2025-01-01'
+description: 'SEO description'
+tags: ['SAT', 'Math']
+author: 'Gabriel'
+---
+```
+3. Write content in Markdown
+4. Deploy — it's automatic!
 
-## 🛠️ npm Scripts
+---
+
+## 🛠 npm Scripts
 
 ```bash
-npm run dev       # Start development server
-npm run build     # Build for production
-npm run start     # Start production server
-npm run db:push   # Push schema to database
-npm run db:seed   # Seed database
-npm run db:studio # Open Prisma Studio
+npm run dev        # Development server
+npm run build      # Production build
+npm run start      # Production server
+npm run lint       # Run ESLint
+npm run db:push    # Push schema to database
+npm run db:seed    # Seed sample data
+npm run db:studio  # Visual database editor
 ```
 
 ---
 
-**Built for EduTrack Hub** | Optimized for Vercel + Neon | Phase 1 Complete ✅
+## 📄 License
+
+Private — All Rights Reserved
+
+---
+
+**Built with ❤️ for EduTrack Hub** | Optimized for Vercel + Neon

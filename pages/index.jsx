@@ -105,9 +105,14 @@ const Hero = () => {
               </span>
             </h1>
 
+            {/* Sub-tagline */}
+            <p className="text-lg sm:text-xl font-semibold text-slate-500 tracking-wide">
+              Flexible learning. Measurable progress.
+            </p>
+
             {/* Subheadline */}
             <p className="text-xl text-slate-600 leading-relaxed max-w-xl">
-              From elementary foundations to professional mastery. Join a hub built to help you **crush your goals**, fix foundational gaps, and unleash your potential.
+              From elementary foundations to professional mastery. Join a hub built to help you crush your goals, fix foundational gaps, and unleash your potential.
             </p>
 
             {/* CTA Group */}
@@ -201,7 +206,7 @@ const Hero = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-slate-900">94%</p>
-                  <p className="text-xs text-slate-500">Grade Improvement</p>
+                  <p className="text-xs text-slate-500">Success Rate</p>
                 </div>
               </div>
             </div>
@@ -310,7 +315,7 @@ const HowItWorks = () => {
     {
       number: "03",
       title: "Master the Topic",
-      description: "Get the recording and notes immediately after class. Review until it clicks. See your grades transform.",
+      description: "Get the recording and notes immediately after class. Review until it clicks. See your skills transform.",
       icon: Icons.TrendingUp,
       color: "from-amber-500 to-amber-600"
     }
@@ -367,7 +372,7 @@ const LearningHubs = () => {
       title: "Foundation Hub",
       subtitle: "Elementary & Middle",
       description: "Building the core logic and study habits that make future complex topics effortless.",
-      icon: Icons.HeroBlob, // Placeholder or specific icon
+      icon: Icons.BookOpen, // Book for foundational learning
       color: "bg-blue-50 text-blue-700",
       link: "/hubs/foundation"
     },
@@ -415,8 +420,7 @@ const LearningHubs = () => {
                 style={{ transitionDelay: `${i * 100}ms` }}
               >
                 <div className={`w-14 h-14 rounded-2xl ${hub.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                  {/* Icon component or dynamic svg */}
-                  <span className="text-2xl font-bold">{hub.title[0]}</span>
+                  <hub.icon className="w-7 h-7" />
                 </div>
                 <p className="text-sm font-bold tracking-wider uppercase opacity-60 mb-2">{hub.subtitle}</p>
                 <h3 className="text-xl font-bold text-slate-900 mb-3">{hub.title}</h3>
@@ -532,7 +536,7 @@ const Testimonials = () => {
         <div ref={ref} className={`text-center mb-16 transition-all duration-1000 ${isInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <p className="text-teal-600 font-semibold mb-3">Proven Results</p>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900">
-            Real Students. Real Grades.
+            Real Learners. Real Results.
           </h2>
         </div>
 
@@ -571,7 +575,7 @@ const FinalCTA = () => {
         <Icons.HeroBlob />
       </div>
       <div className="max-w-4xl mx-auto text-center px-6 relative z-10">
-        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Ready to upgrade your grades?</h2>
+        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Ready to level up?</h2>
         <p className="text-teal-100 text-xl mb-10 max-w-2xl mx-auto">
           Join the next cohort of high-achievers. Spaces are limited for live sessions.
         </p>

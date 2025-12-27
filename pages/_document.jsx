@@ -10,20 +10,19 @@ export default function Document() {
         {/* Preconnect for faster font loading */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
-        {/* Fonts */}
+
+        {/* Fonts - Primary: Plus Jakarta Sans */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
         />
-        
+
         {/* Favicon */}
         <link rel="icon" href="/logo.png" type="image/png" />
         <link rel="apple-touch-icon" href="/logo.png" />
-        <link rel="apple-touch-icon" href="/logo.png" />
-        
-        {/* Theme color */}
-        <meta name="theme-color" content="#22c55e" />
+
+        {/* Theme color - Teal-500 brand color */}
+        <meta name="theme-color" content="#14B8A6" />
       </Head>
       <body>
         <Main />
