@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import prisma from '../../../lib/db';
 import { sendEmail, contactFormAdminTemplate, contactFormConfirmationTemplate } from '../../../lib/email';
+import { applyRateLimit } from '../../../lib/rate-limit';
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'hello@edutrackhub.com';
 
@@ -16,6 +17,13 @@ const contactSchema = z.object({
 });
 
 export default async function handler(req, res) {
+  // 1. Rate Limiting (3 attempts per 10 minutes)
+  if (!await applyRateLimit(req, res, {
+    limit: 3,
+    windowMs: 10 * 60 * 1000,
+    keyPrefix: 'contact'
+  })) return;
+
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).json({ error: 'Method not allowed' });

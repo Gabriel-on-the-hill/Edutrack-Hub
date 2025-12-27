@@ -1,11 +1,19 @@
 import { requireAuth } from '../../../lib/auth';
 import prisma from '../../../lib/db';
 import Stripe from 'stripe';
+import { applyRateLimit } from '../../../lib/rate-limit';
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
 export default async function handler(req, res) {
+    // 1. Rate Limiting (5 attempts per 10 minutes)
+    if (!await applyRateLimit(req, res, {
+        limit: 5,
+        windowMs: 10 * 60 * 1000,
+        keyPrefix: 'checkout'
+    })) return;
+
     // Only allow POST
     if (req.method !== 'POST') {
         res.setHeader('Allow', ['POST']);

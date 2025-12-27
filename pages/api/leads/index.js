@@ -1,6 +1,7 @@
 import prisma from '../../../lib/db';
 import { z } from 'zod';
 import { sendEmail, leadMagnetTemplate } from '../../../lib/email';
+import { applyRateLimit } from '../../../lib/rate-limit';
 
 const leadSchema = z.object({
     email: z.string().email(),
@@ -9,6 +10,13 @@ const leadSchema = z.object({
 });
 
 export default async function handler(req, res) {
+    // 1. Rate Limiting (3 attempts per 10 minutes)
+    if (!await applyRateLimit(req, res, {
+        limit: 3,
+        windowMs: 10 * 60 * 1000,
+        keyPrefix: 'leads'
+    })) return;
+
     if (req.method !== 'POST') {
         res.setHeader('Allow', ['POST']);
         return res.status(405).end('Method Not Allowed');

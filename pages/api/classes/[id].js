@@ -3,7 +3,7 @@
 // DELETE /api/classes/[id] - Delete class (admin only)
 
 import prisma from '../../../lib/db';
-import { requireRole } from '../../../lib/auth';
+import { requireRole, getCurrentUser } from '../../../lib/auth';
 import { z } from 'zod';
 
 // Validation schema for updating a class
@@ -56,9 +56,23 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: 'Class not found' });
       }
 
+      // Check if user is authorized to see sensitive details (admin or enrolled student)
+      const user = getCurrentUser(req);
+      const isAdmin = user?.role === 'ADMIN';
+      const isEnrolled = classData.enrollments.some(e => e.user.id === user?.uid && e.status === 'CONFIRMED');
+      const canSeeSensitive = isAdmin || isEnrolled;
+
       return res.status(200).json({
         class: {
           ...classData,
+          // ✅ V-01: Prevent unauthorized access to session links
+          meetUrl: canSeeSensitive ? classData.meetUrl : null,
+          notesUrl: canSeeSensitive ? classData.notesUrl : null,
+          recordingUrl: canSeeSensitive ? classData.recordingUrl : null,
+
+          // ✅ V-02: Prevent PII leak (student names)
+          enrollments: isAdmin ? classData.enrollments : [],
+
           topics: classData.topics ? JSON.parse(classData.topics) : [],
           enrolledCount: classData._count.enrollments,
           spotsLeft: classData.maxStudents - classData._count.enrollments,

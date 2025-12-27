@@ -34,6 +34,7 @@ const nextConfig = {
       'edutrackhub.com',
       'www.edutrackhub.com',
       'cdn.edutrackhub.com',
+      'res.cloudinary.com',
       'images.unsplash.com', // Demo only - remove in production
       'images.pexels.com', // Demo only - remove in production
     ],

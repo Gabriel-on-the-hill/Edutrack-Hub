@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import prisma from '../../../lib/db';
 import { comparePassword, generateToken, setAuthCookie } from '../../../lib/auth';
+import { applyRateLimit } from '../../../lib/rate-limit';
 
 // Validation schema
 const loginSchema = z.object({
@@ -12,6 +13,13 @@ const loginSchema = z.object({
 });
 
 export default async function handler(req, res) {
+  // 1. Rate Limiting (10 attempts per 5 minutes)
+  if (!await applyRateLimit(req, res, {
+    limit: 10,
+    windowMs: 5 * 60 * 1000,
+    keyPrefix: 'login'
+  })) return;
+
   // Only allow POST
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);

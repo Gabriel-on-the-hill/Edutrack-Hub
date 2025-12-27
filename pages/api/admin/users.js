@@ -8,10 +8,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        const authUser = getCurrentUser(req);
-        if (!authUser || authUser.role !== 'ADMIN') {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
+        const authUser = requireRole(req, res, ['ADMIN']);
+        if (!authUser) return;
 
         const students = await prisma.user.findMany({
             where: {

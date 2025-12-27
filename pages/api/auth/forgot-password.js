@@ -5,6 +5,7 @@ import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 import prisma from '../../../lib/db';
 import { sendEmail, passwordResetTemplate } from '../../../lib/email';
+import { applyRateLimit } from '../../../lib/rate-limit';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -14,6 +15,13 @@ const schema = z.object({
 });
 
 export default async function handler(req, res) {
+    // 1. Rate Limiting (5 requests per 15 minutes)
+    if (!await applyRateLimit(req, res, {
+        limit: 5,
+        windowMs: 15 * 60 * 1000,
+        keyPrefix: 'forgot-pass'
+    })) return;
+
     if (req.method !== 'POST') {
         res.setHeader('Allow', ['POST']);
         return res.status(405).json({ error: 'Method not allowed' });

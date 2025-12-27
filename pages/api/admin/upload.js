@@ -1,7 +1,15 @@
 import formidable from 'formidable';
 import fs from 'fs';
 import path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
 import { requireRole } from '../../../lib/auth';
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export const config = {
     api: {
@@ -19,12 +27,22 @@ export default async function handler(req, res) {
     const user = requireRole(req, res, ['ADMIN']);
     if (!user) return;
 
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-
-    // Ensure directory exists (double check)
+    // Use a temporary folder for formidable
+    const uploadDir = path.join(process.cwd(), 'tmp_uploads');
     if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
     }
+
+    const ALLOWED_MIMETYPES = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    ];
 
     const form = formidable({
         uploadDir,
@@ -33,7 +51,7 @@ export default async function handler(req, res) {
     });
 
     return new Promise((resolve, reject) => {
-        form.parse(req, (err, fields, files) => {
+        form.parse(req, async (err, fields, files) => {
             if (err) {
                 console.error('Upload error:', err);
                 res.status(500).json({ error: 'Failed to upload file' });
@@ -46,16 +64,48 @@ export default async function handler(req, res) {
                 return resolve();
             }
 
-            // Generate public URL
-            const fileName = path.basename(file.filepath);
-            const publicUrl = `/uploads/${fileName}`;
+            // Validate MIME type
+            if (!ALLOWED_MIMETYPES.includes(file.mimetype)) {
+                if (fs.existsSync(file.filepath)) {
+                    fs.unlinkSync(file.filepath);
+                }
+                res.status(400).json({ error: `File type ${file.mimetype} not allowed` });
+                return resolve();
+            }
 
-            res.status(200).json({
-                url: publicUrl,
-                name: file.originalFilename || fileName,
-                size: file.size,
-            });
-            resolve();
+            try {
+                // Upload to Cloudinary
+                const resourceType = file.mimetype.startsWith('image/') ? 'image' : 'raw';
+
+                const uploadResponse = await cloudinary.uploader.upload(file.filepath, {
+                    folder: 'edutrack_hub',
+                    resource_type: resourceType,
+                    use_filename: true,
+                });
+
+                // Delete the local temporary file
+                if (fs.existsSync(file.filepath)) {
+                    fs.unlinkSync(file.filepath);
+                }
+
+                res.status(200).json({
+                    url: uploadResponse.secure_url,
+                    name: path.basename(file.originalFilename || uploadResponse.public_id),
+                    size: file.size,
+                    type: file.mimetype,
+                    cloudinaryId: uploadResponse.public_id
+                });
+                resolve();
+
+            } catch (cloudErr) {
+                console.error('Cloudinary Error:', cloudErr);
+                // Clean up local file even on cloud failure
+                if (fs.existsSync(file.filepath)) {
+                    fs.unlinkSync(file.filepath);
+                }
+                res.status(500).json({ error: 'Failed to upload to cloud storage' });
+                resolve();
+            }
         });
     });
 }
