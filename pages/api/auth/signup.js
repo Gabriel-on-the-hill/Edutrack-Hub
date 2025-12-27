@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import prisma from '../../../lib/db';
 import { hashPassword, generateToken, setAuthCookie } from '../../../lib/auth';
+import { sendEmail, welcomeEmailTemplate } from '../../../lib/email';
 
 // Validation schema
 const signupSchema = z.object({
@@ -76,6 +77,13 @@ export default async function handler(req, res) {
     const cookie = setAuthCookie(token, process.env.NODE_ENV === 'production');
     res.setHeader('Set-Cookie', cookie);
 
+    // Send welcome email (non-blocking)
+    sendEmail({
+      to: user.email,
+      subject: 'Welcome to EduTrack Hub! 🎉',
+      html: welcomeEmailTemplate(user.name),
+    }).catch(err => console.error('Failed to send welcome email:', err));
+
     // Return success
     return res.status(201).json({
       message: 'Account created successfully',
@@ -89,7 +97,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Signup error:', error);
-    
+
     // Handle Prisma errors
     if (error.code === 'P2002') {
       return res.status(409).json({

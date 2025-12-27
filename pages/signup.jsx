@@ -1,51 +1,9 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-
-const Icons = {
-  User: ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  ),
-  Mail: ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="4" width="20" height="16" rx="2" />
-      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-    </svg>
-  ),
-  Lock: ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  ),
-  Eye: ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  ),
-  EyeOff: ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-      <line x1="1" y1="1" x2="23" y2="23" />
-    </svg>
-  ),
-  Check: ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  ),
-  ArrowRight: ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="5" y1="12" x2="19" y2="12" />
-      <polyline points="12 5 19 12 12 19" />
-    </svg>
-  ),
-};
+import { Icons } from '@/components/ui/Icons';
 
 export default function Signup() {
   const router = useRouter();
@@ -58,6 +16,9 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Check for class booking intent
+  const classId = router.query.class;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -76,6 +37,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
+      // 1. Create Account
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -88,13 +50,51 @@ export default function Signup() {
 
       const data = await res.json();
 
-      if (res.ok) {
-        router.push('/dashboard/student');
-      } else {
-        setError(data.error || 'Failed to create account');
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to create account');
       }
+
+      // 2. If Class ID present, Auto-Enroll
+      if (classId) {
+        try {
+          const enrollRes = await fetch('/api/enrollments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ classId }),
+          });
+
+          // Handle Payment Required (Stripe)
+          if (enrollRes.status === 402) {
+            const checkoutRes = await fetch('/api/checkout/session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ classId })
+            });
+
+            if (checkoutRes.ok) {
+              const { url } = await checkoutRes.json();
+              if (url) {
+                window.location.href = url; // Redirect to Stripe
+                return; // Prevent redirect to dashboard
+              }
+            }
+          }
+
+          if (!enrollRes.ok && enrollRes.status !== 402) {
+            console.warn("Auto-enrollment failed, manual enrollment required");
+            // We don't block the user, just redirect, maybe with a warning?
+            // Ideally we show a success message on the dashboard.
+          }
+        } catch (enrollError) {
+          console.error("Enrollment error:", enrollError);
+        }
+      }
+
+      // 3. Redirect
+      router.push('/dashboard/student');
+
     } catch (err) {
-      setError('Something went wrong. Please try again.');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -114,14 +114,7 @@ export default function Signup() {
         <title>Sign Up Free - EduTrack Hub</title>
         <meta name="description" content="Create your free EduTrack Hub account and try your first class free. No credit card required." />
         <link rel="icon" href="/logo.png" type="image/png" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </Head>
-
-      <style jsx global>{`
-        * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-      `}</style>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex">
         {/* Left Side - Branding */}
@@ -135,9 +128,13 @@ export default function Signup() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 relative z-10">
-            <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <span className="text-white font-bold text-xl">E</span>
-            </div>
+            <Image
+              src="/logo.png"
+              alt="EduTrack Hub"
+              width={48}
+              height={48}
+              className="rounded-xl"
+            />
             <span className="font-bold text-2xl text-white tracking-tight">
               EduTrack<span className="text-teal-200">Hub</span>
             </span>
@@ -152,7 +149,7 @@ export default function Signup() {
             <p className="text-teal-100 text-lg mb-8">
               Join students from 12+ countries who've transformed their academic performance with live, interactive tutoring.
             </p>
-            
+
             {/* Benefits */}
             <div className="space-y-4">
               {benefits.map((benefit, i) => (
@@ -187,9 +184,13 @@ export default function Signup() {
           <div className="w-full max-w-md">
             {/* Mobile Logo */}
             <Link href="/" className="lg:hidden flex items-center gap-2 mb-8 justify-center">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">E</span>
-              </div>
+              <Image
+                src="/logo.png"
+                alt="EduTrack Hub"
+                width={40}
+                height={40}
+                className="rounded-xl"
+              />
               <span className="font-semibold text-xl text-slate-900">
                 EduTrack<span className="text-teal-600">Hub</span>
               </span>
@@ -203,6 +204,11 @@ export default function Signup() {
                   Sign in
                 </Link>
               </p>
+              {classId && (
+                <div className="mt-4 p-3 bg-teal-50 text-teal-700 rounded-lg text-sm font-medium border border-teal-100">
+                  You're booking a class! Create your account to finalize.
+                </div>
+              )}
             </div>
 
             {error && (
@@ -290,17 +296,22 @@ export default function Signup() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white py-4 rounded-xl font-bold shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? 'Creating account...' : 'Create free account'}
+                {loading ? 'Creating account...' : classId ? 'Create Account & Book Class' : 'Create Free Account'}
                 {!loading && <Icons.ArrowRight className="w-5 h-5" />}
               </button>
             </form>
 
-            <p className="mt-8 text-center text-sm text-slate-500">
-              By creating an account, you agree to our{' '}
-              <a href="#" className="text-teal-600 hover:underline">Terms</a> and{' '}
-              <a href="#" className="text-teal-600 hover:underline">Privacy Policy</a>
+            <p className="mt-8 text-center text-slate-500 text-sm">
+              By signing up, you agree to our{' '}
+              <Link href="/terms" className="text-teal-600 hover:underline">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="text-teal-600 hover:underline">
+                Privacy Policy
+              </Link>
             </p>
           </div>
         </div>

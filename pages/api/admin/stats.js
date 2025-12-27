@@ -41,13 +41,65 @@ export default async function handler(req, res) {
     // Get recent signups (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
+
     const recentSignups = await prisma.user.count({
       where: {
         role: 'STUDENT',
         createdAt: { gte: thirtyDaysAgo },
       },
     });
+
+    // Get raw data for charts (last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const rawPayments = await prisma.payment.findMany({
+      where: {
+        status: 'COMPLETED',
+        createdAt: { gte: sixMonthsAgo }
+      },
+      select: { amount: true, createdAt: true }
+    });
+
+    const rawStudents = await prisma.user.findMany({
+      where: {
+        role: 'STUDENT',
+        createdAt: { gte: sixMonthsAgo }
+      },
+      select: { createdAt: true }
+    });
+
+    // Helper to format month
+    const getMonthKey = (date) => date.toISOString().slice(0, 7); // YYYY-MM
+
+    // Aggregate Revenue
+    const revenueMap = {};
+    rawPayments.forEach(p => {
+      const key = getMonthKey(p.createdAt);
+      revenueMap[key] = (revenueMap[key] || 0) + p.amount;
+    });
+
+    // Aggregate Students
+    const studentsMap = {};
+    rawStudents.forEach(s => {
+      const key = getMonthKey(s.createdAt);
+      studentsMap[key] = (studentsMap[key] || 0) + 1;
+    });
+
+    // Fill last 6 months buckets
+    const chartData = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const key = getMonthKey(d);
+      const label = d.toLocaleDateString('en-US', { month: 'short' });
+
+      chartData.push({
+        name: label,
+        revenue: (revenueMap[key] || 0) / 100, // Convert to main unit
+        students: studentsMap[key] || 0
+      });
+    }
 
     return res.status(200).json({
       totalStudents,
@@ -61,6 +113,7 @@ export default async function handler(req, res) {
         acc[stat.status] = stat._count.id;
         return acc;
       }, {}),
+      chartData // New field
     });
   } catch (error) {
     console.error('Admin stats error:', error);

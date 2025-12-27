@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth, withAuth } from '../../hooks/useAuth';
+import Image from 'next/image';
 
 function StudentDashboard() {
   const router = useRouter();
@@ -23,10 +24,67 @@ function StudentDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+
+    // Handle Payment Success
+    if (router.query.payment_success) {
+      // Clean URL
+      const { payment_success, class_id, ...rest } = router.query;
+      router.replace({ pathname: router.pathname, query: rest }, undefined, { shallow: true });
+      // Logic to show success message
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 5000);
+    }
+
+    // Handle Auto Enroll Intent
+    const autoClassId = router.query.enroll_class || router.query.classId;
+    if (autoClassId) {
+      handleAutoEnroll(autoClassId);
+    }
+  }, [router.isReady, router.query]);
+
+  const handleAutoEnroll = async (classId) => {
+    try {
+      const res = await fetch('/api/enrollments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ classId }),
+      });
+
+      if (res.status === 402) {
+        // Payment Required -> Redirect to Stripe
+        const checkoutRes = await fetch('/api/checkout/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ classId })
+        });
+
+        if (checkoutRes.ok) {
+          const { url } = await checkoutRes.json();
+          if (url) window.location.href = url;
+        }
+        return;
+      }
+
+      if (res.ok) {
+        // Success (Free class)
+        fetchDashboardData();
+        // Clear query
+        const { enroll_class, classId: cid, ...rest } = router.query;
+        router.replace({ pathname: router.pathname, query: rest }, undefined, { shallow: true });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -79,8 +137,14 @@ function StudentDashboard() {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString, type = 'full') => {
     const date = new Date(dateString);
+    if (type === 'time') {
+      return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+    }
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -88,16 +152,6 @@ function StudentDashboard() {
       hour: 'numeric',
       minute: '2-digit',
     });
-  };
-
-  const formatPrice = (price, currency = 'NGN') => {
-    if (price === 0) return 'Free';
-    const amount = price / 100;
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 0,
-    }).format(amount);
   };
 
   const isClassJoinable = (classItem) => {
@@ -114,9 +168,16 @@ function StudentDashboard() {
       ATTENDED: 'bg-green-100 text-green-700',
       COMPLETED: 'bg-purple-100 text-purple-700',
       MISSED: 'bg-red-100 text-red-700',
-      CANCELLED: 'bg-gray-100 text-gray-700',
+      CANCELLED: 'bg-slate-100 text-slate-700',
     };
-    return badges[status] || 'bg-gray-100 text-gray-700';
+    return badges[status] || 'bg-slate-100 text-slate-700';
+  };
+
+  const getProgressColor = (rate) => {
+    if (rate >= 80) return 'bg-green-500';
+    if (rate >= 50) return 'bg-blue-500';
+    if (rate >= 20) return 'bg-yellow-500';
+    return 'bg-slate-300';
   };
 
   return (
@@ -125,196 +186,230 @@ function StudentDashboard() {
         <title>Student Dashboard - EduTrack Hub</title>
       </Head>
 
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-slate-50 font-sans relative">
+        {/* Mobile Header */}
+        <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b z-30 px-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Image src="/logo.png" alt="EduTrack Hub" width={28} height={28} />
+            <span className="font-bold text-slate-800">Student Panel</span>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            aria-label="Toggle Menu"
+          >
+            <span className="text-2xl">{sidebarOpen ? '✕' : '☰'}</span>
+          </button>
+        </div>
+
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-md flex flex-col">
-          <div className="p-6 border-b">
-            <Link href="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="EduTrack Hub" className="h-8" />
-              <span className="font-bold text-lg text-gray-800">EduTrack Hub</span>
-            </Link>
+        <aside className={`w-64 bg-white shadow-xl z-40 flex flex-col fixed inset-y-0 lg:static transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+          <div className="p-6 border-b flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Image src="/logo.png" alt="EduTrack Hub" width={32} height={32} />
+              <span className="font-bold text-lg text-slate-800">EduTrack Hub</span>
+            </div>
+            <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-slate-600">
+              ✕
+            </button>
           </div>
 
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 p-4 space-y-2">
+            <div className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Menu</div>
+
             <button
-              onClick={() => setActiveTab('overview')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                activeTab === 'overview'
-                  ? 'bg-primary-50 text-primary-600'
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
+              onClick={() => { setActiveTab('overview'); setSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${activeTab === 'overview'
+                ? 'bg-gradient-to-r from-teal-50 to-teal-100 text-teal-700 shadow-sm'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
+              <span className="text-xl">📊</span>
               Overview
             </button>
             <button
               onClick={() => setActiveTab('classes')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                activeTab === 'classes'
-                  ? 'bg-primary-50 text-primary-600'
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${activeTab === 'classes'
+                ? 'bg-gradient-to-r from-teal-50 to-teal-100 text-teal-700 shadow-sm'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+              <span className="text-xl">📅</span>
               My Classes
             </button>
             <button
               onClick={() => setActiveTab('progress')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                activeTab === 'progress'
-                  ? 'bg-primary-50 text-primary-600'
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${activeTab === 'progress'
+                ? 'bg-gradient-to-r from-teal-50 to-teal-100 text-teal-700 shadow-sm'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
+              <span className="text-xl">📈</span>
               Progress
             </button>
+
+            <div className="my-6 border-t border-slate-100"></div>
+
+            <div className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Explore</div>
+
             <Link
               href="/classes"
-              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
+              className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl font-medium transition-all duration-200"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <span className="text-xl">🔍</span>
               Browse Classes
             </Link>
           </nav>
 
-          <div className="p-4 border-t">
-            <div className="px-4 py-2 mb-2">
-              <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
-              <p className="text-xs text-gray-500">{user?.email}</p>
+          <div className="p-4 border-t bg-slate-50">
+            <div className="px-4 py-2 mb-3">
+              <p className="text-sm font-semibold text-slate-900 truncate">{user?.name}</p>
+              <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+              <span className="inline-block mt-2 px-2 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-700 rounded-full tracking-wide">
+                STUDENT
+              </span>
             </div>
             <button
               onClick={logout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-red-600 hover:bg-red-50 hover:text-red-700 border border-slate-200 rounded-xl font-medium shadow-sm transition-all duration-200"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
               Sign Out
             </button>
           </div>
         </aside>
 
+        {/* Overlay for mobile sidebar */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          ></div>
+        )}
+
         {/* Main Content */}
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-4 md:p-8 lg:p-10 max-w-7xl mx-auto w-full pt-20 lg:pt-10">
+          {showSuccess && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 p-6 bg-gradient-to-r from-teal-500 to-teal-600 rounded-2xl text-white shadow-xl shadow-teal-500/20 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl">🎉</div>
+                <div>
+                  <h3 className="font-bold text-lg">Payment Successful!</h3>
+                  <p className="text-teal-50">You've successfully enrolled in the class. Welcome aboard!</p>
+                </div>
+              </div>
+              <button onClick={() => setShowSuccess(false)} className="p-2 hover:bg-white/10 rounded-lg transition-colors">✕</button>
+            </motion.div>
+          )}
           {loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-500 border-t-transparent"></div>
             </div>
           ) : (
             <>
               {/* Header */}
               <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-slate-900">
                   Welcome back, {user?.name?.split(' ')[0]}! 👋
                 </h1>
-                <p className="text-gray-600 mt-1">Track your learning progress and upcoming classes</p>
+                <p className="text-slate-600 mt-1">Track your learning progress and upcoming classes</p>
               </div>
 
               {/* Overview Tab */}
               {activeTab === 'overview' && (
-                <>
+                <div className="space-y-8">
                   {/* Stats Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-white rounded-xl shadow-sm p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                          </svg>
+                        <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                          <span className="text-2xl">📚</span>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Classes Enrolled</p>
-                          <p className="text-2xl font-bold text-gray-900">{stats.totalEnrolled}</p>
+                          <p className="text-sm font-medium text-slate-500">Classes Enrolled</p>
+                          <p className="text-2xl font-bold text-slate-900">{stats.totalEnrolled}</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm p-6">
+                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
+                        <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center">
+                          <span className="text-2xl">✅</span>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Attendance Rate</p>
-                          <p className="text-2xl font-bold text-gray-900">{stats.attendanceRate}%</p>
+                          <p className="text-sm font-medium text-slate-500">Attendance Rate</p>
+                          <p className="text-2xl font-bold text-slate-900">{stats.attendanceRate}%</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm p-6">
+                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                          <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
+                        <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                          <span className="text-2xl">⏱️</span>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Learning Hours</p>
-                          <p className="text-2xl font-bold text-gray-900">{stats.totalHours}h</p>
+                          <p className="text-sm font-medium text-slate-500">Learning Hours</p>
+                          <p className="text-2xl font-bold text-slate-900">{stats.totalHours}h</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm p-6">
+                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center">
                           <span className="text-2xl">🔥</span>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Current Streak</p>
-                          <p className="text-2xl font-bold text-gray-900">{stats.currentStreak} classes</p>
+                          <p className="text-sm font-medium text-slate-500">Current Streak</p>
+                          <p className="text-2xl font-bold text-slate-900">{stats.currentStreak}</p>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Upcoming Classes */}
-                  <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">Your Upcoming Classes</h2>
+                  <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                    <h2 className="text-lg font-bold text-slate-900 mb-6">Your Upcoming Classes</h2>
                     {enrollments.filter(e => e.status === 'CONFIRMED' || e.status === 'PENDING').length === 0 ? (
-                      <div className="text-center py-8">
-                        <p className="text-gray-500 mb-4">You haven't enrolled in any upcoming classes yet.</p>
-                        <Link href="/classes" className="btn btn-primary">
+                      <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        <p className="text-slate-500 mb-4">You haven't enrolled in any upcoming classes yet.</p>
+                        <Link href="/classes" className="inline-flex items-center justify-center px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
                           Browse Classes
                         </Link>
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="grid gap-4">
                         {enrollments
                           .filter(e => e.status === 'CONFIRMED' || e.status === 'PENDING')
                           .slice(0, 5)
                           .map((enrollment) => (
                             <div
                               key={enrollment.id}
-                              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                              className="flex flex-col md:flex-row md:items-center justify-between p-5 bg-slate-50 rounded-xl border border-slate-100 gap-4"
                             >
                               <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900">{enrollment.class.title}</h3>
-                                <p className="text-sm text-gray-600">
-                                  {enrollment.class.subject} • {formatDate(enrollment.class.scheduledTime)}
-                                </p>
+                                <h3 className="font-bold text-slate-900 text-lg">{enrollment.class.title}</h3>
+                                <div className="flex items-center gap-3 text-slate-600 mt-1">
+                                  <span className="px-2 py-0.5 bg-white rounded border border-slate-200 text-xs font-semibold">{enrollment.class.subject}</span>
+                                  <span className="text-sm">📅 {formatDate(enrollment.class.scheduledTime)}</span>
+                                  <span className="text-sm">🕒 {formatDate(enrollment.class.scheduledTime, 'time')}</span>
+                                </div>
                               </div>
                               <div className="flex items-center gap-3">
-                                <span className={`px-2 py-1 text-xs font-semibold rounded ${getStatusBadge(enrollment.status)}`}>
+                                <span className={`px-3 py-1 text-xs font-bold rounded-full ${getStatusBadge(enrollment.status)}`}>
                                   {enrollment.status}
                                 </span>
                                 {isClassJoinable(enrollment.class) && enrollment.class.meetUrl && (
                                   <button
                                     onClick={() => handleJoinClass(enrollment.class)}
-                                    className="btn btn-primary text-sm"
+                                    className="px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 shadow-lg shadow-teal-500/20 transition-all animate-pulse"
                                   >
-                                    Join Now
+                                    Join Class Now
                                   </button>
                                 )}
                               </div>
@@ -323,66 +418,81 @@ function StudentDashboard() {
                       </div>
                     )}
                   </div>
-                </>
+                </div>
               )}
 
               {/* Classes Tab */}
               {activeTab === 'classes' && (
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">All My Classes</h2>
+                <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-lg font-bold text-slate-900">All My Classes</h2>
+                    <Link href="/classes" className="text-teal-600 hover:text-teal-700 text-sm font-semibold hover:underline">
+                      Browse New Classes →
+                    </Link>
+                  </div>
+
                   {enrollments.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500 mb-4">No classes yet.</p>
-                      <Link href="/classes" className="btn btn-primary">
+                    <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                      <p className="text-slate-500 mb-4">No classes yet.</p>
+                      <Link href="/classes" className="inline-flex items-center justify-center px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
                         Browse Classes
                       </Link>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-slate-50">
                           <tr>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Class</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Date</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Rating</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider rounded-l-lg">Class</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Resources</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider rounded-r-lg">Recording</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
+                        <tbody className="divide-y divide-slate-100">
                           {enrollments.map((enrollment) => (
-                            <tr key={enrollment.id} className="hover:bg-gray-50">
-                              <td className="px-4 py-3">
+                            <tr key={enrollment.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-4 py-4">
                                 <div>
-                                  <p className="font-medium text-gray-900">{enrollment.class.title}</p>
-                                  <p className="text-sm text-gray-500">{enrollment.class.subject}</p>
+                                  <p className="font-semibold text-slate-900">{enrollment.class.title}</p>
+                                  <p className="text-xs text-slate-500">{enrollment.class.subject}</p>
                                 </div>
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-600">
+                              <td className="px-4 py-4 text-sm text-slate-600">
                                 {formatDate(enrollment.class.scheduledTime)}
                               </td>
-                              <td className="px-4 py-3">
-                                <span className={`px-2 py-1 text-xs font-semibold rounded ${getStatusBadge(enrollment.status)}`}>
+                              <td className="px-4 py-4">
+                                <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${getStatusBadge(enrollment.status)}`}>
                                   {enrollment.status}
                                 </span>
                               </td>
-                              <td className="px-4 py-3">
-                                {enrollment.rating ? (
-                                  <span className="text-yellow-500">{'★'.repeat(enrollment.rating)}</span>
+                              <td className="px-4 py-4">
+                                {enrollment.class.notesUrl ? (
+                                  <a
+                                    href={enrollment.class.notesUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-colors"
+                                  >
+                                    <span>📂</span> Resources
+                                  </a>
                                 ) : (
-                                  <span className="text-gray-400">—</span>
+                                  <span className="text-slate-400 text-xs italic">None</span>
                                 )}
                               </td>
-                              <td className="px-4 py-3">
-                                {enrollment.class.recordingUrl && (
+                              <td className="px-4 py-4">
+                                {enrollment.class.recordingUrl ? (
                                   <a
                                     href={enrollment.class.recordingUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs font-semibold hover:bg-purple-100 transition-colors"
                                   >
-                                    Watch Recording
+                                    <span>📼</span> Watch
                                   </a>
+                                ) : (
+                                  <span className="text-slate-400 text-xs italic">Pending</span>
                                 )}
                               </td>
                             </tr>
@@ -398,77 +508,83 @@ function StudentDashboard() {
               {activeTab === 'progress' && (
                 <div className="space-y-6">
                   {/* Overall Progress */}
-                  <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">Overall Progress</h2>
+                  <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                    <h2 className="text-lg font-bold text-slate-900 mb-6">Overall Progress</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <p className="text-3xl font-bold text-blue-600">{stats.totalCompleted}</p>
-                        <p className="text-sm text-blue-700">Classes Completed</p>
+                      <div className="text-center p-6 bg-blue-50 rounded-2xl border border-blue-100">
+                        <p className="text-4xl font-bold text-blue-600 mb-1">{stats.totalCompleted}</p>
+                        <p className="text-sm font-semibold text-blue-700">Classes Completed</p>
                       </div>
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <p className="text-3xl font-bold text-green-600">{stats.totalHours}h</p>
-                        <p className="text-sm text-green-700">Total Learning Time</p>
+                      <div className="text-center p-6 bg-teal-50 rounded-2xl border border-teal-100">
+                        <p className="text-4xl font-bold text-teal-600 mb-1">{stats.totalHours}h</p>
+                        <p className="text-sm font-semibold text-teal-700">Total Learning Time</p>
                       </div>
-                      <div className="text-center p-4 bg-purple-50 rounded-lg">
-                        <p className="text-3xl font-bold text-purple-600">{stats.subjectsStudied}</p>
-                        <p className="text-sm text-purple-700">Subjects Studied</p>
+                      <div className="text-center p-6 bg-purple-50 rounded-2xl border border-purple-100">
+                        <p className="text-4xl font-bold text-purple-600 mb-1">{stats.subjectsStudied}</p>
+                        <p className="text-sm font-semibold text-purple-700">Subjects Studied</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Subject Progress */}
-                  <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">Progress by Subject</h2>
+                  <div className="bg-white rounded-2xl shadow-sm p-6 border border-slate-100">
+                    <h2 className="text-lg font-bold text-slate-900 mb-6">Progress by Subject</h2>
                     {progress && progress.length > 0 ? (
                       <div className="space-y-4">
-                        {progress.map((p) => (
-                          <div key={p.id} className="p-4 border border-gray-200 rounded-lg">
-                            <div className="flex justify-between items-center mb-2">
-                              <h3 className="font-semibold text-gray-900">{p.subject}</h3>
-                              <span className="px-2 py-1 text-xs font-semibold bg-gray-100 text-gray-700 rounded">
-                                {p.currentLevel}
-                              </span>
+                        {progress.map((p) => {
+                          const completionRate = p.classesEnrolled > 0 ? (p.classesCompleted / p.classesEnrolled) * 100 : 0;
+                          return (
+                            <div key={p.id} className="p-5 border border-slate-200 rounded-xl hover:border-teal-200 transition-colors">
+                              <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-bold text-slate-900 text-lg">{p.subject}</h3>
+                                <span className="px-2.5 py-1 text-xs font-bold bg-slate-100 text-slate-700 rounded-full tracking-wide uppercase">
+                                  {p.currentLevel}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-4 gap-4 text-sm mb-4">
+                                <div>
+                                  <p className="text-slate-500 mb-1">Enrolled</p>
+                                  <p className="font-bold text-slate-900">{p.classesEnrolled}</p>
+                                </div>
+                                <div>
+                                  <p className="text-slate-500 mb-1">Attended</p>
+                                  <p className="font-bold text-slate-900">{p.classesAttended}</p>
+                                </div>
+                                <div>
+                                  <p className="text-slate-500 mb-1">Completed</p>
+                                  <p className="font-bold text-slate-900">{p.classesCompleted}</p>
+                                </div>
+                                <div>
+                                  <p className="text-slate-500 mb-1">Time</p>
+                                  <p className="font-bold text-slate-900">{Math.round(p.totalMinutes / 60 * 10) / 10}h</p>
+                                </div>
+                              </div>
+                              {/* Progress bar */}
+                              <div>
+                                <div className="flex justify-between text-xs mb-1.5">
+                                  <span className="font-semibold text-slate-600">Completion Rate</span>
+                                  <span className="font-bold text-slate-900">{Math.round(completionRate)}%</span>
+                                </div>
+                                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-500 ${getProgressColor(completionRate)}`}
+                                    style={{
+                                      width: `${completionRate}%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              </div>
                             </div>
-                            <div className="grid grid-cols-4 gap-4 text-sm">
-                              <div>
-                                <p className="text-gray-500">Enrolled</p>
-                                <p className="font-semibold">{p.classesEnrolled}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-500">Attended</p>
-                                <p className="font-semibold">{p.classesAttended}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-500">Completed</p>
-                                <p className="font-semibold">{p.classesCompleted}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-500">Time</p>
-                                <p className="font-semibold">{Math.round(p.totalMinutes / 60 * 10) / 10}h</p>
-                              </div>
-                            </div>
-                            {/* Progress bar */}
-                            <div className="mt-3">
-                              <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div
-                                  className="bg-primary-500 h-2 rounded-full transition-all"
-                                  style={{
-                                    width: `${p.classesEnrolled > 0 ? (p.classesCompleted / p.classesEnrolled) * 100 : 0}%`,
-                                  }}
-                                ></div>
-                              </div>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {p.classesEnrolled > 0
-                                  ? Math.round((p.classesCompleted / p.classesEnrolled) * 100)
-                                  : 0}% completion rate
-                              </p>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
-                      <div className="text-center py-8">
-                        <p className="text-gray-500">No progress data yet. Start by attending some classes!</p>
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <span className="text-3xl">📉</span>
+                        </div>
+                        <p className="text-slate-500 mb-4">No progress data yet.</p>
+                        <p className="text-sm text-slate-400">Start attending classes to see your stats build up!</p>
                       </div>
                     )}
                   </div>

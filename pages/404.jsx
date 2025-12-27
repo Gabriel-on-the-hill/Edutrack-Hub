@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const Icons = {
   Home: ({ className }) => (
@@ -42,9 +43,13 @@ export default function Custom404() {
         {/* Header */}
         <header className="p-6">
           <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">E</span>
-            </div>
+            <Image
+              src="/logo.png"
+              alt="EduTrack Hub"
+              width={40}
+              height={40}
+              className="rounded-xl"
+            />
             <span className="font-semibold text-xl text-slate-900">
               EduTrack<span className="text-teal-600">Hub</span>
             </span>
@@ -71,7 +76,7 @@ export default function Custom404() {
               Oops! Page not found
             </h1>
             <p className="text-lg text-slate-600 mb-8">
-              Looks like this page went on a study break and didn't come back. 
+              Looks like this page went on a study break and didn't come back.
               Let's get you back on track!
             </p>
 

@@ -4,6 +4,7 @@
 import prisma from '../../../lib/db';
 import { requireAuth } from '../../../lib/auth';
 import { z } from 'zod';
+import { sendEmail, enrollmentConfirmationTemplate } from '../../../lib/email';
 
 const enrollSchema = z.object({
   classId: z.string().min(1, 'Class ID is required'),
@@ -31,6 +32,8 @@ export default async function handler(req, res) {
               scheduledTime: true,
               duration: true,
               meetUrl: true,
+              notesUrl: true,
+              recordingUrl: true,
               status: true,
             },
           },
@@ -83,6 +86,16 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'This class is full' });
       }
 
+      // Check if payment is required (Phase 2 Stripe)
+      if (classData.price > 0) {
+        return res.status(402).json({
+          error: 'Payment required',
+          requiresPayment: true,
+          price: classData.price,
+          currency: classData.currency
+        });
+      }
+
       // Check if already enrolled
       const existing = await prisma.enrollment.findUnique({
         where: {
@@ -93,6 +106,12 @@ export default async function handler(req, res) {
       if (existing) {
         return res.status(400).json({ error: 'You are already enrolled in this class' });
       }
+
+      // Get user info for email
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, email: true },
+      });
 
       // Check if class is free or paid
       const isFree = classData.price === 0;
@@ -115,6 +134,27 @@ export default async function handler(req, res) {
           },
         },
       });
+
+      // Send enrollment confirmation email for free classes
+      if (isFree && user) {
+        const classDate = new Date(classData.scheduledTime).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+        const classTime = new Date(classData.scheduledTime).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        });
+
+        sendEmail({
+          to: user.email,
+          subject: `You're enrolled in ${classData.title}! ✅`,
+          html: enrollmentConfirmationTemplate(user.name, classData.title, classDate, classTime),
+        }).catch(err => console.error('Failed to send enrollment email:', err));
+      }
 
       // If paid class, return info for payment
       if (!isFree) {

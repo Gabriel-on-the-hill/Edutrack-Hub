@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 // Icons
 const Icons = {
@@ -40,19 +41,22 @@ export default function Navigation({ transparent = false }) {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        showBackground
-          ? 'bg-white/95 backdrop-blur-md shadow-sm py-3'
-          : 'bg-transparent py-5'
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${showBackground
+        ? 'bg-white/95 backdrop-blur-md shadow-sm py-3'
+        : 'bg-transparent py-5'
+        }`}
     >
       <div className="max-w-7xl mx-auto px-5 lg:px-8">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg shadow-teal-500/25 group-hover:shadow-teal-500/40 transition-shadow">
-              <span className="text-white font-bold text-lg">E</span>
-            </div>
+            <Image
+              src="/logo.png"
+              alt="EduTrack Hub"
+              width={40}
+              height={40}
+              className="rounded-xl"
+            />
             <span className="font-semibold text-xl tracking-tight text-slate-900">
               EduTrack<span className="text-teal-600">Hub</span>
             </span>
@@ -60,17 +64,17 @@ export default function Navigation({ transparent = false }) {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/#how-it-works" className="text-slate-600 hover:text-teal-600 transition-colors font-medium">
-              How It Works
-            </Link>
-            <Link href="/#programs" className="text-slate-600 hover:text-teal-600 transition-colors font-medium">
-              Programs
-            </Link>
             <Link href="/classes" className="text-slate-600 hover:text-teal-600 transition-colors font-medium">
               Classes
             </Link>
+            <Link href="/about" className="text-slate-600 hover:text-teal-600 transition-colors font-medium">
+              About
+            </Link>
             <Link href="/contact" className="text-slate-600 hover:text-teal-600 transition-colors font-medium">
               Contact
+            </Link>
+            <Link href="/blog" className="text-slate-600 hover:text-teal-600 transition-colors font-medium">
+              Blog
             </Link>
           </div>
 
@@ -104,22 +108,21 @@ export default function Navigation({ transparent = false }) {
 
         {/* Mobile Menu */}
         <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ${
-            mobileMenuOpen ? 'max-h-96 mt-4' : 'max-h-0'
-          }`}
+          className={`md:hidden overflow-hidden transition-all duration-300 ${mobileMenuOpen ? 'max-h-96 mt-4' : 'max-h-0'
+            }`}
         >
           <div className="bg-white rounded-2xl shadow-xl p-6 space-y-4">
-            <Link href="/#how-it-works" className="block text-slate-700 hover:text-teal-600 font-medium py-2">
-              How It Works
-            </Link>
-            <Link href="/#programs" className="block text-slate-700 hover:text-teal-600 font-medium py-2">
-              Programs
-            </Link>
             <Link href="/classes" className="block text-slate-700 hover:text-teal-600 font-medium py-2">
               Classes
             </Link>
+            <Link href="/about" className="block text-slate-700 hover:text-teal-600 font-medium py-2">
+              About
+            </Link>
             <Link href="/contact" className="block text-slate-700 hover:text-teal-600 font-medium py-2">
               Contact
+            </Link>
+            <Link href="/blog" className="block text-slate-700 hover:text-teal-600 font-medium py-2">
+              Blog
             </Link>
             <hr className="border-slate-100" />
             <Link href="/login" className="block text-slate-700 hover:text-teal-600 font-medium py-2">

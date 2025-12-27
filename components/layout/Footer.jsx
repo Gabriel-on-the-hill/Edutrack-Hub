@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 const Icons = {
   Instagram: ({ className }) => (
@@ -43,28 +44,32 @@ export default function Footer({ minimal = false }) {
           {/* Brand */}
           <div className="md:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">E</span>
-              </div>
+              <Image
+                src="/logo.png"
+                alt="EduTrack Hub"
+                width={40}
+                height={40}
+                className="rounded-xl"
+              />
               <span className="font-semibold text-xl text-white tracking-tight">
                 EduTrack<span className="text-teal-400">Hub</span>
               </span>
             </Link>
             <p className="text-slate-400 leading-relaxed max-w-md mb-6">
-              Live online tutoring that transforms struggling students into confident learners. 
+              Live online tutoring that transforms struggling students into confident learners.
               Small groups, real understanding, global community.
             </p>
             <div className="flex items-center gap-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-slate-800 hover:bg-teal-600 flex items-center justify-center transition-colors">
+              <a href="https://instagram.com/edutrackhub" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-800 hover:bg-teal-600 flex items-center justify-center transition-colors">
                 <Icons.Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-slate-800 hover:bg-teal-600 flex items-center justify-center transition-colors">
+              <a href="https://twitter.com/edutrackhub" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-800 hover:bg-teal-600 flex items-center justify-center transition-colors">
                 <Icons.Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-slate-800 hover:bg-teal-600 flex items-center justify-center transition-colors">
+              <a href="https://linkedin.com/company/edutrackhub" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-800 hover:bg-teal-600 flex items-center justify-center transition-colors">
                 <Icons.LinkedIn className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-slate-800 hover:bg-teal-600 flex items-center justify-center transition-colors">
+              <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-slate-800 hover:bg-teal-600 flex items-center justify-center transition-colors">
                 <Icons.WhatsApp className="w-5 h-5" />
               </a>
             </div>
@@ -87,10 +92,13 @@ export default function Footer({ minimal = false }) {
             <h4 className="text-white font-semibold mb-4">Company</h4>
             <ul className="space-y-3">
               {[
-                { name: 'How It Works', href: '/#how-it-works' },
-                { name: 'Success Stories', href: '/#results' },
-                { name: 'About', href: '/#about' },
+                { name: 'About', href: '/about' },
                 { name: 'Contact', href: '/contact' },
+                { name: 'Blog', href: '/blog' },
+                { name: 'FAQ', href: '/faq' },
+                { name: 'Privacy Policy', href: '/privacy' },
+                { name: 'Terms of Service', href: '/terms' },
+                { name: 'Refund Policy', href: '/refund' },
               ].map((item) => (
                 <li key={item.name}>
                   <Link href={item.href} className="hover:text-teal-400 transition-colors">{item.name}</Link>
@@ -104,8 +112,9 @@ export default function Footer({ minimal = false }) {
         <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
           <p>© {new Date().getFullYear()} EduTrack Hub. All rights reserved.</p>
           <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-teal-400 transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-teal-400 transition-colors">Terms of Service</a>
+            <Link href="/privacy" className="hover:text-teal-400 transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-teal-400 transition-colors">Terms</Link>
+            <Link href="/refund" className="hover:text-teal-400 transition-colors">Refunds</Link>
           </div>
         </div>
       </div>

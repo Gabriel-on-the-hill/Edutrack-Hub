@@ -1,27 +1,57 @@
 # Dependencies
 node_modules/
+.pnp
+.pnp.js
 
-# Next.js build output
+# Testing
+coverage/
+
+# Next.js
 .next/
 out/
+build/
 dist/
 
 # Prisma
+/prisma/migrations/
 .prisma/
 
-# Environment variables
-.env
-.env.*
-!.env.example
+# Misc
+.DS_Store
+*.pem
 
-# Logs
+# Debug
 npm-debug.log*
 yarn-debug.log*
-pnpm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
-# OS junk
-.DS_Store
-Thumbs.db
+# Local Env Files
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
 
 # Vercel
 .vercel/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Gemini Agent
+.gemini/
+
+# Uploads
+public/uploads/

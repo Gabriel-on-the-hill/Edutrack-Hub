@@ -1,12 +1,16 @@
 // POST /api/contact/send
-// Saves contact form submissions to database
+// Saves contact form submissions to database and sends email notifications
 
 import { z } from 'zod';
 import prisma from '../../../lib/db';
+import { sendEmail, contactFormAdminTemplate, contactFormConfirmationTemplate } from '../../../lib/email';
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'hello@edutrackhub.com';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   email: z.string().email('Invalid email'),
+  phone: z.string().optional(),
   subject: z.string().optional(),
   message: z.string().min(10, 'Message must be at least 10 characters'),
 });
@@ -26,19 +30,32 @@ export default async function handler(req, res) {
       });
     }
 
-    const { name, email, subject, message } = result.data;
+    const { name, email, phone, subject, message } = result.data;
+    const subjectLine = subject || 'General Inquiry';
 
     // Save to database
     await prisma.contactMessage.create({
       data: {
         name,
         email,
-        subject: subject || 'General Inquiry',
+        subject: subjectLine,
         message,
       },
     });
 
-    // TODO: Send email notification via Resend
+    // Send notification email to admin
+    sendEmail({
+      to: ADMIN_EMAIL,
+      subject: `[Contact Form] ${subjectLine} - from ${name}`,
+      html: contactFormAdminTemplate(name, email, phone, subjectLine, message),
+    }).catch(err => console.error('Failed to send admin notification:', err));
+
+    // Send confirmation email to user
+    sendEmail({
+      to: email,
+      subject: 'Thanks for contacting EduTrack Hub!',
+      html: contactFormConfirmationTemplate(name),
+    }).catch(err => console.error('Failed to send confirmation email:', err));
 
     return res.status(200).json({
       message: 'Thank you for your message. We\'ll get back to you soon!',

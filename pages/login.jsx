@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 
@@ -113,7 +114,7 @@ export default function Login() {
             <p className="text-slate-300 text-lg mb-8">
               Pick up right where you left off. Your classes, progress, and recordings are waiting for you.
             </p>
-            
+
             {/* Stats */}
             <div className="grid grid-cols-3 gap-6">
               {[
@@ -151,9 +152,13 @@ export default function Login() {
           <div className="w-full max-w-md">
             {/* Mobile Logo */}
             <Link href="/" className="lg:hidden flex items-center gap-2 mb-8 justify-center">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">E</span>
-              </div>
+              <Image
+                src="/logo.png"
+                alt="EduTrack Hub"
+                width={40}
+                height={40}
+                className="rounded-xl"
+              />
               <span className="font-semibold text-xl text-slate-900">
                 EduTrack<span className="text-teal-600">Hub</span>
               </span>
@@ -222,7 +227,7 @@ export default function Login() {
                   <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
                   <span className="text-sm text-slate-600">Remember me</span>
                 </label>
-                <a href="#" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
+                <a href="/forgot-password" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
                   Forgot password?
                 </a>
               </div>
@@ -239,8 +244,8 @@ export default function Login() {
 
             <p className="mt-8 text-center text-sm text-slate-500">
               By signing in, you agree to our{' '}
-              <a href="#" className="text-teal-600 hover:underline">Terms</a> and{' '}
-              <a href="#" className="text-teal-600 hover:underline">Privacy Policy</a>
+              <a href="/terms" className="text-teal-600 hover:underline">Terms</a> and{' '}
+              <a href="/privacy" className="text-teal-600 hover:underline">Privacy Policy</a>
             </p>
           </div>
         </div>

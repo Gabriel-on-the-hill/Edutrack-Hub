@@ -326,3 +326,19 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
 }
+
+// ============================================================================
+// LEAD MODEL - Email captures for marketing
+// ============================================================================
+
+model Lead {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  source       String   @default("website") // e.g., "sat-guide-popup"
+  isSubscribed Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([email])
+  @@index([createdAt])
+}

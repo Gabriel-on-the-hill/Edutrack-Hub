@@ -3,6 +3,7 @@
 
 import prisma from '../../../lib/db';
 import { requireAuth, requireRole } from '../../../lib/auth';
+import { createMeeting } from '../../../lib/google';
 import { z } from 'zod';
 
 // Validation schema for creating a class
@@ -18,6 +19,8 @@ const createClassSchema = z.object({
   currency: z.string().default('NGN'),
   topics: z.array(z.string()).optional(),
   meetUrl: z.string().url().optional(),
+  notesUrl: z.string().url().optional(),
+  recordingUrl: z.string().url().optional(),
 });
 
 export default async function handler(req, res) {
@@ -59,8 +62,12 @@ export default async function handler(req, res) {
           maxStudents: true,
           price: true,
           currency: true,
+          currency: true,
           status: true,
           topics: true,
+          meetUrl: true,
+          notesUrl: true,
+          recordingUrl: true,
           _count: {
             select: { enrollments: true },
           },
@@ -103,6 +110,17 @@ export default async function handler(req, res) {
 
       const data = result.data;
 
+      // Auto-generate Google Meet link (Phase 2 Automation)
+      let generatedMeetUrl = null;
+      if (!data.meetUrl) {
+        generatedMeetUrl = await createMeeting({
+          title: data.title,
+          description: data.description || `Class: ${data.subject}`,
+          startTime: new Date(data.scheduledTime),
+          durationMinutes: data.duration,
+        });
+      }
+
       const newClass = await prisma.class.create({
         data: {
           title: data.title,
@@ -115,7 +133,10 @@ export default async function handler(req, res) {
           price: data.price,
           currency: data.currency,
           topics: data.topics ? JSON.stringify(data.topics) : null,
-          meetUrl: data.meetUrl,
+          topics: data.topics ? JSON.stringify(data.topics) : null,
+          meetUrl: data.meetUrl || generatedMeetUrl,
+          notesUrl: data.notesUrl,
+          recordingUrl: data.recordingUrl,
           status: 'SCHEDULED',
         },
       });
