@@ -64,9 +64,34 @@ export default function Navigation({ transparent = false }) {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/classes" className="text-slate-600 hover:text-teal-600 transition-colors font-medium">
-              Classes
-            </Link>
+            <div className="relative group">
+              <button className="flex items-center gap-1 text-slate-600 hover:text-teal-600 transition-colors font-medium py-4">
+                Learning Hubs
+                <svg className="w-4 h-4 transition-transform group-hover:rotate-180" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              <div className="absolute top-full left-0 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                <Link href="/hubs/foundation" className="block px-6 py-3 hover:bg-slate-50">
+                  <p className="font-bold text-slate-900">Foundation Hub</p>
+                  <p className="text-xs text-slate-500">Elementary & Middle</p>
+                </Link>
+                <Link href="/hubs/success" className="block px-6 py-3 hover:bg-slate-50">
+                  <p className="font-bold text-slate-900">Success Hub</p>
+                  <p className="text-xs text-slate-500">High School & SAT</p>
+                </Link>
+                <Link href="/hubs/elite" className="block px-6 py-3 hover:bg-slate-50">
+                  <p className="font-bold text-slate-900">Elite Hub</p>
+                  <p className="text-xs text-slate-500">Professional Development</p>
+                </Link>
+                <Link href="/hubs/partner" className="block px-6 py-3 hover:bg-slate-50">
+                  <p className="font-bold text-slate-900">Partner Hub</p>
+                  <p className="text-xs text-slate-500">Parents & Educators</p>
+                </Link>
+              </div>
+            </div>
             <Link href="/about" className="text-slate-600 hover:text-teal-600 transition-colors font-medium">
               About
             </Link>
@@ -112,9 +137,20 @@ export default function Navigation({ transparent = false }) {
             }`}
         >
           <div className="bg-white rounded-2xl shadow-xl p-6 space-y-4">
-            <Link href="/classes" className="block text-slate-700 hover:text-teal-600 font-medium py-2">
-              Classes
-            </Link>
+            <details className="group">
+              <summary className="flex items-center justify-between text-slate-700 hover:text-teal-600 font-medium py-2 cursor-pointer list-none">
+                Learning Hubs
+                <svg className="w-4 h-4 transition-transform group-open:rotate-180" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </summary>
+              <div className="pl-4 mt-2 space-y-2 border-l-2 border-slate-100">
+                <Link href="/hubs/foundation" className="block text-sm text-slate-600 py-1">Foundation (Elementary)</Link>
+                <Link href="/hubs/success" className="block text-sm text-slate-600 py-1">Success (High School)</Link>
+                <Link href="/hubs/elite" className="block text-sm text-slate-600 py-1">Elite (Professional)</Link>
+                <Link href="/hubs/partner" className="block text-sm text-slate-600 py-1">Partner (Parents)</Link>
+              </div>
+            </details>
             <Link href="/about" className="block text-slate-700 hover:text-teal-600 font-medium py-2">
               About
             </Link>

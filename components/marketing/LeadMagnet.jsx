@@ -38,11 +38,11 @@ export default function LeadMagnet() {
 
             <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                    Get the "SAT Master Cheat Sheet" Free
+                    Get the "Mastery Roadmap" Free
                 </h2>
                 <p className="text-teal-100 mb-8 max-w-xl mx-auto text-lg">
-                    Download the exact formula sheet Gabriel's students use to score 1500+.
-                    Includes critical geometry formulas, grammar rules, and pacing strategies.
+                    Download our curated collection of resources for students, parents, and professionals.
+                    Includes study hacks, foundation guides, and professional excellence templates.
                 </p>
 
                 {status === 'success' ? (

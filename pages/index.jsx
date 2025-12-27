@@ -84,14 +84,14 @@ const Hero = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
               </span>
-              New: SAT Mastery Cohort Open
+              Mastery Hub: New Cohorts for All Levels
             </div>
 
             {/* Main Headline */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1] tracking-tight">
-              Don't just pass.{' '}
+              Master the skills that{' '}
               <span className="relative inline-block">
-                <span className="relative z-10 text-teal-600">Shatter your limits.</span>
+                <span className="relative z-10 text-teal-600">shape your future.</span>
                 <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 12" preserveAspectRatio="none">
                   <path
                     d="M0 9 Q 50 0, 100 9 T 200 9"
@@ -107,7 +107,7 @@ const Hero = () => {
 
             {/* Subheadline */}
             <p className="text-xl text-slate-600 leading-relaxed max-w-xl">
-              Turn "I don't get it" into "A*" with Gabriel. Small-group mentorship that fixes foundational gaps and teaches you <em>how to think</em> like a top student.
+              From elementary foundations to professional mastery. Join a hub built to help you **crush your goals**, fix foundational gaps, and unleash your potential.
             </p>
 
             {/* CTA Group */}
@@ -230,19 +230,19 @@ const ForStudentsWho = () => {
 
   const struggles = [
     {
-      text: "watch YouTube tutorials but still can't solve exam problems",
+      text: "feel like you're learning but can't apply the concepts practically",
       emoji: "😰"
     },
     {
-      text: "understand the concept in class but blank out during the test",
+      text: "hit a plateau in your professional or academic growth",
       emoji: "😶"
     },
     {
-      text: "feel too embarrassed to ask 'stupid questions' at school",
+      text: "wish there was a clear roadmap from foundation to mastery",
       emoji: "🤐"
     },
     {
-      text: "have been told you're 'just not a math person' (spoiler: you are)",
+      text: "believe you've reached your limit (spoiler: you're just getting started)",
       emoji: "😔"
     }
   ];
@@ -276,9 +276,9 @@ const ForStudentsWho = () => {
             </div>
             <div className="relative z-10">
               <p className="text-2xl sm:text-3xl font-semibold leading-snug">
-                You're not "bad at school".
+                It's not about the "A".
                 <br />
-                <span className="text-teal-100">You just need the right explanation.</span>
+                <span className="text-teal-100">It's about the growth that gets you there.</span>
               </p>
             </div>
           </div>
@@ -351,6 +351,83 @@ const HowItWorks = () => {
                 <p className="text-slate-600 leading-relaxed">{step.description}</p>
               </div>
             </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// Learning Hubs Section
+const LearningHubs = () => {
+  const [ref, isInView] = useInView();
+
+  const hubs = [
+    {
+      title: "Foundation Hub",
+      subtitle: "Elementary & Middle",
+      description: "Building the core logic and study habits that make future complex topics effortless.",
+      icon: Icons.HeroBlob, // Placeholder or specific icon
+      color: "bg-blue-50 text-blue-700",
+      link: "/hubs/foundation"
+    },
+    {
+      title: "Success Hub",
+      subtitle: "High School & SAT",
+      description: "Strategic prep for IGCSE, SAT, and A-Levels. Turn exam anxiety into exam mastery.",
+      icon: Icons.Star,
+      color: "bg-teal-50 text-teal-700",
+      link: "/hubs/success"
+    },
+    {
+      title: "Elite Hub",
+      subtitle: "Professional Mastery",
+      description: "Advanced up-skilling and mentorship for professionals looking to dominate their field.",
+      icon: Icons.TrendingUp,
+      color: "bg-purple-50 text-purple-700",
+      link: "/hubs/elite"
+    },
+    {
+      title: "Partner Hub",
+      subtitle: "Parents & Educators",
+      description: "Resources and coordination tools to support the students in your care.",
+      icon: Icons.Users,
+      color: "bg-amber-50 text-amber-700",
+      link: "/hubs/partner"
+    }
+  ];
+
+  return (
+    <section className="py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-5 lg:px-8">
+        <div ref={ref} className={`text-center mb-16 transition-all duration-1000 ${isInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <p className="text-teal-600 font-semibold mb-3">Choose Your Path</p>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900">
+            A Hub built to help you crush your goals
+          </h2>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {hubs.map((hub, i) => (
+            <Link key={i} href={hub.link}>
+              <div
+                className={`group h-full p-8 rounded-3xl border border-slate-100 transition-all duration-500 hover:shadow-xl hover:border-transparent cursor-pointer ${isInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+                style={{ transitionDelay: `${i * 100}ms` }}
+              >
+                <div className={`w-14 h-14 rounded-2xl ${hub.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                  {/* Icon component or dynamic svg */}
+                  <span className="text-2xl font-bold">{hub.title[0]}</span>
+                </div>
+                <p className="text-sm font-bold tracking-wider uppercase opacity-60 mb-2">{hub.subtitle}</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">{hub.title}</h3>
+                <p className="text-slate-600 leading-relaxed mb-6">
+                  {hub.description}
+                </p>
+                <span className="text-teal-600 font-bold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                  Enter Hub →
+                </span>
+              </div>
+            </Link>
           ))}
         </div>
       </div>
@@ -580,6 +657,7 @@ export default function Home({ posts }) {
         <Hero />
         <ForStudentsWho />
         <HowItWorks />
+        <LearningHubs />
         <LeadMagnet />
         <Programs />
         <Testimonials />
