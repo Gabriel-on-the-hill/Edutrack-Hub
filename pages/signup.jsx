@@ -41,6 +41,7 @@ export default function Signup() {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
@@ -60,6 +61,7 @@ export default function Signup() {
           const enrollRes = await fetch('/api/enrollments', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ classId }),
           });
 
@@ -68,6 +70,7 @@ export default function Signup() {
             const checkoutRes = await fetch('/api/checkout/session', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
               body: JSON.stringify({ classId })
             });
 

@@ -53,13 +53,14 @@ export default function Login() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        router.push(data.user.role === 'admin' ? '/admin/dashboard' : '/dashboard/student');
+        router.push(data.user.role === 'ADMIN' ? '/admin/dashboard' : '/dashboard/student');
       } else {
         setError(data.error || 'Invalid credentials');
       }
