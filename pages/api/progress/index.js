@@ -7,19 +7,21 @@ import { requireAuth } from '../../../lib/auth';
 export default async function handler(req, res) {
   // GET - Fetch user's progress across all subjects
   if (req.method === 'GET') {
-    const user = requireAuth(req, res);
-    if (!user) return;
+    const auth = requireAuth(req, res);
+    if (!auth) return;
+
+    const userId = auth.user.userId;
 
     try {
       // Get progress records for this user
       const progress = await prisma.progress.findMany({
-        where: { userId: user.id },
+        where: { userId },
         orderBy: { updatedAt: 'desc' },
       });
 
       // Get overall stats
       const enrollments = await prisma.enrollment.findMany({
-        where: { userId: user.id },
+        where: { userId },
         include: {
           class: {
             select: {
@@ -45,8 +47,8 @@ export default async function handler(req, res) {
       const subjects = [...new Set(enrollments.map((e) => e.class.subject))];
 
       // Calculate attendance rate
-      const attendanceRate = totalEnrolled > 0 
-        ? Math.round((totalAttended / totalEnrolled) * 100) 
+      const attendanceRate = totalEnrolled > 0
+        ? Math.round((totalAttended / totalEnrolled) * 100)
         : 0;
 
       // Get current streak (consecutive completed classes)
