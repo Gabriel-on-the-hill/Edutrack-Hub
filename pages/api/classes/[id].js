@@ -4,6 +4,7 @@
 
 import prisma from '../../../lib/db';
 import { requireRole, getCurrentUser } from '../../../lib/auth';
+import { createAuditLog, AuditAction, AuditEntity } from '../../../lib/audit';
 import { z } from 'zod';
 
 // Validation schema for updating a class
@@ -121,6 +122,15 @@ export default async function handler(req, res) {
         data: updateData,
       });
 
+      // Audit log: Class updated
+      await createAuditLog({
+        actorId: auth.user.userId,
+        action: AuditAction.UPDATE,
+        entity: AuditEntity.CLASS,
+        entityId: id,
+        changes: updateData,
+      });
+
       return res.status(200).json({
         message: 'Class updated successfully',
         class: {
@@ -144,8 +154,23 @@ export default async function handler(req, res) {
     if (!auth) return;
 
     try {
+      // Get class info before deletion for audit log
+      const classToDelete = await prisma.class.findUnique({
+        where: { id },
+        select: { title: true, subject: true },
+      });
+
       await prisma.class.delete({
         where: { id },
+      });
+
+      // Audit log: Class deleted
+      await createAuditLog({
+        actorId: auth.user.userId,
+        action: AuditAction.DELETE,
+        entity: AuditEntity.CLASS,
+        entityId: id,
+        changes: classToDelete,
       });
 
       return res.status(200).json({

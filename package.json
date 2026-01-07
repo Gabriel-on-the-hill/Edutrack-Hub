@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@sentry/nextjs": "^10.32.1",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.8.0",
     "clsx": "^2.1.1",

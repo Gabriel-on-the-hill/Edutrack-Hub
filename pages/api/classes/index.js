@@ -4,6 +4,7 @@
 import prisma from '../../../lib/db';
 import { requireAuth, requireRole } from '../../../lib/auth';
 import { createMeeting } from '../../../lib/google';
+import { createAuditLog, AuditAction, AuditEntity } from '../../../lib/audit';
 import { z } from 'zod';
 
 // Validation schema for creating a class
@@ -139,6 +140,16 @@ export default async function handler(req, res) {
           recordingUrl: data.recordingUrl,
           status: 'SCHEDULED',
         },
+      });
+
+      // Audit log: Class created
+      await createAuditLog({
+        actorId: auth.user.userId,
+        action: AuditAction.CREATE,
+        entity: AuditEntity.CLASS,
+        entityId: newClass.id,
+        changes: { title: newClass.title, subject: newClass.subject },
+        metadata: { price: newClass.price, scheduledTime: newClass.scheduledTime },
       });
 
       return res.status(201).json({

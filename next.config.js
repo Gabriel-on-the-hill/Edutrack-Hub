@@ -7,12 +7,15 @@
  * ✅ Cache optimization (performance)
  * ✅ Security headers
  * ✅ Powered-by header hidden (security)
+ * ✅ Sentry error tracking (monitoring)
  * 
  * EDIT INSTRUCTIONS:
  * - Update image domains to your actual domains
  * - Adjust ISR revalidation times based on your content update frequency
- * - Add your Sentry DSN for error tracking
+ * - Add your Sentry DSN in environment variables
  */
+
+const { withSentryConfig } = require('@sentry/nextjs');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -27,16 +30,13 @@ const nextConfig = {
   // IMAGE OPTIMIZATION - SECURITY: Restrict to trusted domains only
   // ========================================================================
   images: {
-    // EDIT HERE: Replace with your actual image hosting domains
-    // Remove remotePatterns and use specific domains for security
+    // Production image domains only
     domains: [
       'localhost',
       'edutrackhub.com',
       'www.edutrackhub.com',
       'cdn.edutrackhub.com',
       'res.cloudinary.com',
-      'images.unsplash.com', // Demo only - remove in production
-      'images.pexels.com', // Demo only - remove in production
     ],
 
     // Image optimization
@@ -145,5 +145,28 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+// ============================================================================
+// SENTRY CONFIGURATION
+// ============================================================================
+const sentryWebpackPluginOptions = {
+  // Suppresses source map uploading logs during build
+  silent: true,
 
+  // Project identifiers - configure in Sentry dashboard
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+
+  // Auth token for source map upload
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Hides source maps from generated client bundles
+  hideSourceMaps: true,
+
+  // Disables the Sentry SDK when no DSN is provided
+  disableLogger: true,
+};
+
+// Wrap with Sentry only if SENTRY_DSN is configured
+module.exports = process.env.NEXT_PUBLIC_SENTRY_DSN
+  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+  : nextConfig;
