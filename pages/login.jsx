@@ -50,6 +50,7 @@ export default function Login() {
     setLoading(true);
 
     try {
+      console.log('Login attempt starting...');
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -57,14 +58,20 @@ export default function Login() {
         body: JSON.stringify(formData),
       });
 
+      console.log('Login response status:', res.status);
       const data = await res.json();
+      console.log('Login response data:', data);
 
       if (res.ok) {
-        router.push(data.user.role === 'ADMIN' ? '/admin/dashboard' : '/dashboard/student');
+        console.log('Login successful, redirecting to:', data.user.role === 'ADMIN' ? '/admin/dashboard' : '/dashboard/student');
+        // Use window.location for full page reload to reset React state completely
+        window.location.href = data.user.role === 'ADMIN' ? '/admin/dashboard' : '/dashboard/student';
       } else {
+        console.log('Login failed:', data.error);
         setError(data.error || 'Invalid credentials');
       }
     } catch (err) {
+      console.error('Login exception:', err);
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
