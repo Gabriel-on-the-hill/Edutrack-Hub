@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '../../hooks/useAuth';
 
 // Icons
 const Icons = {
@@ -23,9 +24,23 @@ const Icons = {
       <polyline points="12 5 19 12 12 19" />
     </svg>
   ),
+  User: ({ className }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  ),
+  LogOut: ({ className }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  )
 };
 
 export default function Navigation({ transparent = false }) {
+  const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -38,6 +53,7 @@ export default function Navigation({ transparent = false }) {
   }, []);
 
   const showBackground = !transparent || isScrolled;
+  const dashboardLink = user?.role === 'ADMIN' ? '/admin/dashboard' : '/dashboard/student';
 
   return (
     <nav
@@ -103,18 +119,45 @@ export default function Navigation({ transparent = false }) {
             </Link>
           </div>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons - Auth Aware */}
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/login" className="text-slate-600 hover:text-teal-600 transition-colors font-medium">
-              Sign In
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2.5 rounded-full font-semibold shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105 transition-all duration-300"
-            >
-              Start Free
-              <Icons.ArrowRight className="w-4 h-4" />
-            </Link>
+            {user ? (
+              <>
+                <div className="flex items-center gap-3 mr-2">
+                  <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-xs ring-2 ring-teal-50">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-slate-700 hidden lg:block">Hi, {user.name.split(' ')[0]}</span>
+                </div>
+                <button
+                  onClick={logout}
+                  className="text-slate-500 hover:text-red-500 transition-colors font-medium text-sm flex items-center gap-1"
+                >
+                  <Icons.LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+                <Link
+                  href={dashboardLink}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-2.5 rounded-full font-semibold shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 hover:scale-105 transition-all duration-300"
+                >
+                  Dashboard
+                  <Icons.ArrowRight className="w-4 h-4" />
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-slate-600 hover:text-teal-600 transition-colors font-medium">
+                  Sign In
+                </Link>
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-2.5 rounded-full font-semibold shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-105 transition-all duration-300"
+                >
+                  Start Free
+                  <Icons.ArrowRight className="w-4 h-4" />
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -133,10 +176,22 @@ export default function Navigation({ transparent = false }) {
 
         {/* Mobile Menu */}
         <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ${mobileMenuOpen ? 'max-h-96 mt-4' : 'max-h-0'
+          className={`md:hidden overflow-hidden transition-all duration-300 ${mobileMenuOpen ? 'max-h-[32rem] mt-4' : 'max-h-0'
             }`}
         >
           <div className="bg-white rounded-2xl shadow-xl p-6 space-y-4">
+            {user && (
+              <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+                <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-lg">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900">{user.name}</p>
+                  <p className="text-xs text-slate-500">{user.email}</p>
+                </div>
+              </div>
+            )}
+
             <details className="group">
               <summary className="flex items-center justify-between text-slate-700 hover:text-teal-600 font-medium py-2 cursor-pointer list-none">
                 Learning Hubs
@@ -161,15 +216,29 @@ export default function Navigation({ transparent = false }) {
               Blog
             </Link>
             <hr className="border-slate-100" />
-            <Link href="/login" className="block text-slate-700 hover:text-teal-600 font-medium py-2">
-              Sign In
-            </Link>
-            <Link
-              href="/signup"
-              className="block text-center bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-full font-semibold mt-4"
-            >
-              Start Free Trial
-            </Link>
+
+            {user ? (
+              <>
+                <Link href={dashboardLink} className="block text-center bg-teal-600 text-white px-6 py-3 rounded-full font-semibold mt-4 shadow-lg shadow-teal-500/20">
+                  {user.role === 'ADMIN' ? 'Admin Dashboard' : 'Student Dashboard'}
+                </Link>
+                <button onClick={logout} className="w-full text-center text-red-500 font-medium py-3 mt-2">
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="block text-slate-700 hover:text-teal-600 font-medium py-2">
+                  Sign In
+                </Link>
+                <Link
+                  href="/signup"
+                  className="block text-center bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-full font-semibold mt-4"
+                >
+                  Start Free Trial
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
