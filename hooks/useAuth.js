@@ -20,11 +20,13 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return;
     }
-    
+
     try {
       setLoading(true);
-      const res = await fetch('/api/auth/me');
-      
+      const res = await fetch('/api/auth/me', {
+        credentials: 'include',
+      });
+
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
@@ -53,6 +55,7 @@ export function AuthProvider({ children }) {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
 
@@ -82,6 +85,7 @@ export function AuthProvider({ children }) {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ name, email, password, phone }),
       });
 
@@ -106,7 +110,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     try {
       setLoading(true);
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
       setUser(null);
       // Router navigation will be handled by the calling component
       if (typeof window !== 'undefined') {
@@ -152,7 +156,7 @@ export function AuthProvider({ children }) {
 // Hook to use auth context
 export function useAuth() {
   const context = useContext(AuthContext);
-  
+
   // Return default values during SSR or when context is not available
   if (!context) {
     return {
@@ -162,8 +166,8 @@ export function useAuth() {
       isAuthenticated: false,
       login: async () => ({ success: false, error: 'Not mounted' }),
       signup: async () => ({ success: false, error: 'Not mounted' }),
-      logout: async () => {},
-      checkAuth: async () => {},
+      logout: async () => { },
+      checkAuth: async () => { },
       hasRole: () => false,
       isAdmin: () => false,
     };

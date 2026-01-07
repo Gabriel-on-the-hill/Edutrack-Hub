@@ -56,6 +56,7 @@ function StudentDashboard() {
       const res = await fetch('/api/enrollments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ classId }),
       });
 
@@ -64,6 +65,7 @@ function StudentDashboard() {
         const checkoutRes = await fetch('/api/checkout/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ classId })
         });
 
@@ -89,7 +91,7 @@ function StudentDashboard() {
   const fetchDashboardData = async () => {
     try {
       // Fetch enrollments
-      const enrollRes = await fetch('/api/enrollments');
+      const enrollRes = await fetch('/api/enrollments', { credentials: 'include' });
       if (enrollRes.ok) {
         const data = await enrollRes.json();
         setEnrollments(data.enrollments || []);
@@ -103,7 +105,7 @@ function StudentDashboard() {
       }
 
       // Fetch progress
-      const progressRes = await fetch('/api/progress');
+      const progressRes = await fetch('/api/progress', { credentials: 'include' });
       if (progressRes.ok) {
         const data = await progressRes.json();
         setProgress(data.progress || []);
@@ -121,6 +123,7 @@ function StudentDashboard() {
       const res = await fetch('/api/attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ classId: classItem.id, action: 'join' }),
       });
 
